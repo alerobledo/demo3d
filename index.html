@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>3D E-commerce MVP Example</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden; /* Evita scrollbars */
+      font-family: sans-serif;
+    }
+    #buyButton {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      padding: 10px 16px;
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      border-radius: 4px;
+      z-index: 999;
+    }
+    #buyButton:hover {
+      background-color: #0056b3;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <button id="buyButton">Comprar</button>
+  
+  <script type="module">
+    import * as THREE from 'https://unpkg.com/three@0.146.0/build/three.module.js';
+    import { GLTFLoader } from 'https://unpkg.com/three@0.146.0/examples/jsm/loaders/GLTFLoader.js';
+
+    let scene, camera, renderer;
+    let model;
+
+    init();
+    animate();
+
+    function init() {
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xf0f0f0);
+
+      camera = new THREE.PerspectiveCamera(
+        45,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        100
+      );
+      camera.position.set(0, 1.6, 3);
+
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.body.appendChild(renderer.domElement);
+
+      const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+      hemiLight.position.set(0, 20, 0);
+      scene.add(hemiLight);
+
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      dirLight.position.set(5, 10, 7);
+      scene.add(dirLight);
+
+      const loader = new GLTFLoader();
+      loader.load(
+        'https://threejs.org/examples/models/gltf/DamagedHelmet/glTF/DamagedHelmet.gltf',
+        function (gltf) {
+          model = gltf.scene;
+          model.scale.set(2, 2, 2);
+          scene.add(model);
+        },
+        undefined,
+        function (error) {
+          console.error(error);
+        }
+      );
+
+      window.addEventListener('resize', onWindowResize, false);
+
+      const buyButton = document.getElementById('buyButton');
+      buyButton.addEventListener('click', () => {
+        alert('¡Producto agregado al carrito (demostración)!');
+      });
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (model) {
+        model.rotation.y += 0.005;
+      }
+      renderer.render(scene, camera);
+    }
+  </script>
+</body>
+</html>
