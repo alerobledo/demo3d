@@ -7,23 +7,23 @@
 </head>
 <body>
 
-  <!-- Canvas del pasillo FPS -->
+  <!-- Canvas del pasillo (FPS) -->
   <canvas id="corridorCanvas"></canvas>
 
-  <!-- Crosshair en el centro (para apuntar) -->
+  <!-- Crosshair en el centro -->
   <div id="crosshair">
     <img src="crosshair.png" width="32" height="32" alt="Crosshair" />
   </div>
 
-  <!-- Overlay pointer lock (instrucciones) -->
+  <!-- Overlay para pointer lock -->
   <div id="blocker">
     <div id="instructions">
-      Clic para iniciar 2025-02-05 20:30<br>
+      Clic para iniciar<br>
       (W, A, S, D para moverte - Mouse para girar)
     </div>
   </div>
 
-  <!-- Popup (visor con OrbitControls) -->
+  <!-- Popup modal para el visor con OrbitControls -->
   <div id="popupModal">
     <div id="popupContent">
       <canvas id="popupCanvas"></canvas>
@@ -43,24 +43,19 @@
   }
   </script>
 
-  <!-- Script del popup -->
+  <!-- Cargamos el módulo del popup -->
   <script type="module" src="./js/popup.js"></script>
 
-  <!-- Script del pasillo -->
+  <!-- Cargamos el módulo del pasillo -->
   <script type="module" src="./js/corridor.js"></script>
 
-  <!-- Script inline principal que llama a initPopup, initCorridor, etc. -->
+  <!-- Script principal para inicializar ambos módulos -->
   <script type="module">
     import { initCorridor, animateCorridor } from './js/corridor.js';
     import { initPopup } from './js/popup.js';
 
-    // Inicializa popup (enlaza botones, renderer, etc.)
     initPopup();
-
-    // Inicializa el pasillo
     initCorridor();
-
-    // Arranca bucle de animación del pasillo
     animateCorridor();
   </script>
 
