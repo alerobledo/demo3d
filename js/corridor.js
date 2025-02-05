@@ -3,6 +3,9 @@ import * as THREE from 'three';
 import { PointerLockControls } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/controls/PointerLockControls.js';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/loaders/GLTFLoader.js';
 
+// Importamos showPopup (y/o hidePopup) desde popup.js
+import { showPopup } from './popup.js';
+
 /* Variables y constantes del corredor */
 let corridorRenderer, corridorScene, corridorCamera;
 let controls;
