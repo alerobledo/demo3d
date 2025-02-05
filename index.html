@@ -35,12 +35,8 @@
   <!-- Botón de compra -->
   <button id="buyButton">Comprar</button>
 
-  <script type="module">
-    /* 
-      IMPORTAMOS Three.js y GLTFLoader DESDE UN CDN, 
-      usando rutas ABSOLUTAS con 'https://...' 
-    */
-    import * as THREE from './three.module.js';
+ <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.146.0/build/three.module.js';
     import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/loaders/GLTFLoader.js';
 
     let scene, camera, renderer;
