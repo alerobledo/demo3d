@@ -23,7 +23,8 @@ export function initPopup() {
 
   popupRenderer = new THREE.WebGLRenderer({
     canvas: popupCanvas,
-    antialias: true
+    antialias: true,
+    alpha: true  // Esto permite que se muestre la transparencia
   });
   // El tamaño real se ajustará en showPopup() según el contenedor
 
