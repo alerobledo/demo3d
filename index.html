@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Pasillo + Popup separado</title>
+  <meta charset="UTF-8" />
+  <title>Proyecto 3D: Pasillo + Popup Separados</title>
   <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
 
-  <!-- Canvas para el pasillo FPS -->
+  <!-- Canvas del pasillo FPS -->
   <canvas id="corridorCanvas"></canvas>
 
-  <!-- Crosshair en el centro -->
+  <!-- Crosshair en el centro (para apuntar) -->
   <div id="crosshair">
-    <img src="crosshair.png" width="32" height="32" alt="Crosshair">
+    <img src="crosshair.png" width="32" height="32" alt="Crosshair" />
   </div>
 
-  <!-- Overlay pointer lock -->
+  <!-- Overlay pointer lock (instrucciones) -->
   <div id="blocker">
     <div id="instructions">
       Clic para iniciar<br>
@@ -23,7 +23,7 @@
     </div>
   </div>
 
-  <!-- Popup modal para ver el modelo con OrbitControls -->
+  <!-- Popup (visor con OrbitControls) -->
   <div id="popupModal">
     <div id="popupContent">
       <canvas id="popupCanvas"></canvas>
@@ -43,33 +43,26 @@
   }
   </script>
 
-  <!-- Primero importamos corridor.js (que exporta initCorridor, animateCorridor, etc.) -->
-  <script type="module" src="js/corridor.js"></script>
+  <!-- Script del popup -->
+  <script type="module" src="./js/popup.js"></script>
 
-  <!-- Luego, el script principal (o inline) para popup y para llamar a initCorridor/animateCorridor -->
+  <!-- Script del pasillo -->
+  <script type="module" src="./js/corridor.js"></script>
+
+  <!-- Script inline principal que llama a initPopup, initCorridor, etc. -->
   <script type="module">
     import { initCorridor, animateCorridor } from './js/corridor.js';
-    // Si tienes un popup.js, también lo importas:
-    // import { initPopup, showPopup, hidePopup } from './js/popup.js';
+    import { initPopup } from './js/popup.js';
 
-    // O si el popup code está aquí inline, lo pones:
+    // Inicializa popup (enlaza botones, renderer, etc.)
+    initPopup();
 
-    // 1) Inicializamos el pasillo
+    // Inicializa el pasillo
     initCorridor();
 
-    // 2) Arrancamos el bucle de animación
+    // Arranca bucle de animación del pasillo
     animateCorridor();
-
-    // 3) Lógica del popup (OrbitControls) va aquí o en otro archivo
-    // ...
-    // Por ejemplo, si el user hace click en el pato, corridor.js hace console.log y
-    // sugiere llamar a showPopup(). Podrías exponer showPopup y usarlo.
-
-    // function initPopup() { ... }
-    // function showPopup() { ... }
-    // function hidePopup() { ... }
-    // function animatePopup() { ... }
-
   </script>
+
 </body>
 </html>
