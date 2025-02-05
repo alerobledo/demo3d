@@ -1,102 +1,63 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>3D E-commerce MVP Example</title>
+  <meta charset="UTF-8">
+  <title>Three.js DamagedHelmet Test</title>
   <style>
-    body {
-      margin: 0;
-      overflow: hidden; /* Evita scrollbars */
-      font-family: sans-serif;
+    body { margin: 0; overflow: hidden; }
+    #info {
+      position: absolute; top: 1em; left: 1em; padding: 0.5em 1em;
+      background: #007bff; color: #fff; border-radius: 4px;
+      font-family: sans-serif; z-index: 9999;
     }
-    #buyButton {
-      position: absolute;
-      top: 10px; 
-      left: 10px; 
-      padding: 10px 16px;
-      background-color: #007bff;
-      color: #fff; 
-      border: none;
-      cursor: pointer;
-      font-size: 16px;
-      border-radius: 4px;
-      z-index: 999;
-    }
-    #buyButton:hover {
-      background-color: #0056b3;
-    }
-    /* El lienzo donde se dibuja la escena 3D */
-    canvas {
-      display: block;
-    }
+    canvas { display: block; }
   </style>
 </head>
 <body>
-  <!-- Botón de compra -->
-  <button id="buyButton">Comprar</button>
-
- <script type="module">
+  <div id="info">DamagedHelmet Test</div>
+  <script type="module">
     import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.146.0/build/three.module.js';
     import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/loaders/GLTFLoader.js';
 
-    let scene, camera, renderer;
-    let model;
+    let scene, camera, renderer, model;
 
     init();
     animate();
 
     function init() {
-      // Crear la escena
       scene = new THREE.Scene();
-      scene.background = new THREE.Color(0xf0f0f0);
+      scene.background = new THREE.Color(0xcccccc);
 
-      // Cámara
-      camera = new THREE.PerspectiveCamera(
-        45,
-        window.innerWidth / window.innerHeight,
-        0.1,
-        100
-      );
+      camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
       camera.position.set(0, 1.6, 3);
 
-      // Renderer
       renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       document.body.appendChild(renderer.domElement);
 
-      // Iluminación
+      // Iluminación básica
+      const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+      dirLight.position.set(5, 10, 7);
+      scene.add(dirLight);
+
       const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
       hemiLight.position.set(0, 20, 0);
       scene.add(hemiLight);
 
-      const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-      dirLight.position.set(5, 10, 7);
-      scene.add(dirLight);
-
-      // Cargar modelo DamagedHelmet
+      // Cargar DamagedHelmet desde la web oficial de Three.js
       const loader = new GLTFLoader();
       loader.load(
         'https://threejs.org/examples/models/gltf/DamagedHelmet/glTF/DamagedHelmet.gltf',
-        function (gltf) {
+        (gltf) => {
           model = gltf.scene;
-          // Ajuste de escala
           model.scale.set(2, 2, 2);
           scene.add(model);
         },
         undefined,
-        function (error) {
-          console.error(error);
-        }
+        (error) => console.error('Error cargando modelo:', error)
       );
 
-      // Evento resize
       window.addEventListener('resize', onWindowResize, false);
-
-      // Acción del botón "Comprar"
-      const buyButton = document.getElementById('buyButton');
-      buyButton.addEventListener('click', () => {
-        alert('¡Producto agregado al carrito (demostración)!');
-      });
     }
 
     function onWindowResize() {
@@ -105,7 +66,6 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
-    // Bucle de animación
     function animate() {
       requestAnimationFrame(animate);
       if (model) {
