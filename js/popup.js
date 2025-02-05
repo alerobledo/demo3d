@@ -75,7 +75,7 @@ export function showPopup() {
   // Cargamos otra vez el .glb (aquí: Duck.glb)
   const loader = new GLTFLoader();
   loader.load(
-    '../Duck.glb',
+    'https://alerobledo.github.io/demo3d/Duck.glb',
     (gltf) => {
       modelInPopup = gltf.scene;
       // Ajustes de escala y posición para que se vea centrado
