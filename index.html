@@ -2,87 +2,123 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Pasillo 3D - Crosshair y casco elevado</title>
+  <title>Pasillo + Popup con OrbitControls</title>
   <style>
     body {
       margin: 0;
-      overflow: hidden;
       font-family: sans-serif;
-    }
-    canvas {
-      display: block;
+      overflow: hidden; /* Sin scroll */
     }
 
-    /* Botón de compra, oculto por defecto */
-    #buyButton {
-      display: none; 
+    /* Canvas del pasillo principal (FPS) */
+    #corridorCanvas {
       position: absolute;
-      top: 10px; 
-      left: 10px; 
-      padding: 10px 16px;
-      background-color: #007bff;
-      color: #fff; 
-      border: none;
-      cursor: pointer;
-      font-size: 16px;
-      border-radius: 4px;
-      z-index: 999;
-    }
-    #buyButton:hover {
-      background-color: #0056b3;
-    }
-
-    /* Overlay para indicar "Haz clic para iniciar" */
-    #blocker {
-      position: absolute;
-      top:0; left:0; 
-      width: 100%;
+      top: 0; left: 0;
+      width: 100%; 
       height: 100%;
-      background-color: rgba(0,0,0,0.7);
-      z-index: 1000;
-    }
-    #instructions {
-      position: absolute;
-      top: 50%; 
-      width: 100%;
-      text-align: center;
-      color: #fff;
-      font-size: 24px;
-      user-select: none;
+      display: block;
+      background: #ccc;
     }
 
-    /* Imagen del crosshair en el centro de la pantalla */
+    /* Crosshair en el centro para apuntar */
     #crosshair {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
       z-index: 2000;
-      pointer-events: none; /* no bloquea clics */
+      pointer-events: none;
+    }
+
+    /* Bloque overlay para pointer lock */
+    #blocker {
+      position: absolute;
+      top:0; left:0; width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.6);
+      z-index: 1000;
+      display: flex; 
+      align-items: center; 
+      justify-content: center;
+    }
+    #instructions {
+      color: #fff;
+      font-size: 24px;
+      text-align: center;
+      user-select: none;
+    }
+
+    /* Popup modal */
+    #popupModal {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: none; /* oculto por defecto */
+      z-index: 3000; /* por encima del canvas del pasillo */
+      align-items: center;
+      justify-content: center;
+    }
+    #popupContent {
+      position: relative;
+      width: 80vw; 
+      height: 80vh;
+      background: #eee;
+      display: flex; 
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #popupCanvas {
+      width: 100%;
+      height: 100%;
+      background: #222;
+      display: block;
+    }
+    #popupButtons {
+      position: absolute;
+      top: 10px; 
+      right: 10px; 
+      display: flex; 
+      gap: 10px;
+    }
+    .popup-btn {
+      padding: 8px 12px;
+      font-size: 14px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
 
-<!-- Bloque para "pointer lock" (instrucciones) -->
-<div id="blocker">
-  <div id="instructions">
-    <span>Clic para iniciar</span>
-    <br /><br />
-    (W, A, S, D para moverte / Mouse para girar)
-  </div>
-</div>
+<!-- Canvas para el pasillo FPS -->
+<canvas id="corridorCanvas"></canvas>
 
-<!-- Botón de compra -->
-<button id="buyButton">Comprar</button>
-
-<!-- Imagen del crosshair en el centro -->
+<!-- Crosshair en el centro -->
 <div id="crosshair">
-  <!-- Ajusta el src a tu propia imagen de retícula -->
   <img src="crosshair.png" width="32" height="32" alt="Crosshair">
 </div>
 
-<!-- 1) Import map para que 'three' sea resuelto en loaders/controls -->
+<!-- Overlay pointer lock -->
+<div id="blocker">
+  <div id="instructions">
+    Clic para iniciar<br>
+    (W, A, S, D para moverte - Mouse para girar)
+  </div>
+</div>
+
+<!-- Popup modal para ver el casco con OrbitControls -->
+<div id="popupModal">
+  <div id="popupContent">
+    <canvas id="popupCanvas"></canvas>
+
+    <div id="popupButtons">
+      <button id="btnClose" class="popup-btn">Cerrar</button>
+      <button id="btnBuy" class="popup-btn">Comprar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import map para que 'three' sea resuelto al importar loaders/controls -->
 <script type="importmap">
 {
   "imports": {
@@ -93,230 +129,338 @@
 
 <script type="module">
   import * as THREE from 'three';
+
+  // 1) ESCENA DEL PASILLO (FPS)
   import { PointerLockControls } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/controls/PointerLockControls.js';
   import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/loaders/GLTFLoader.js';
 
-  // Variables principales
-  let camera, scene, renderer;
+  let corridorRenderer, corridorScene, corridorCamera;
   let controls;
-  let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+  let moveForward=false, moveBackward=false, moveLeft=false, moveRight=false;
+  const corridorWidth=4, corridorHeight=3, corridorLength=20;
+  let helmetModel=null; 
+  let corridorRaycaster;
+  let corridorCanvas;
 
-  // Medidas del pasillo
-  const corridorWidth = 4;
-  const corridorHeight = 3;
-  const corridorLength = 20;
+  let blocker, instructions;
 
-  let helmetModel = null; 
-  let buyButton;          
-  let raycaster;          
+  // 2) ESCENA POPUP (OrbitControls)
+  import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/controls/OrbitControls.js';
+  let popupRenderer, popupScene, popupCamera;
+  let popupControls;
+  let popupModal; 
+  let popupCanvas;
 
-  init();
-  animate();
+  let modelInPopup=null; // el casco en el popup
 
-  function init() {
-    // Escena
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xcccccc);
+  // BOTONES
+  let btnClose, btnBuy;
 
-    // Cámara
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(0, 1.5, 0); // Altura ~1.5m
+  initCorridor();
+  animateCorridor(); // inicia loop
 
-    // Renderer
-    renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+  // Inicializamos la escena "popup"
+  initPopup();
+
+
+  // ----------------------------
+  //     PASILLO  (FPS)
+  // ----------------------------
+  function initCorridor() {
+    corridorCanvas = document.getElementById('corridorCanvas');
+    corridorRenderer = new THREE.WebGLRenderer({ canvas: corridorCanvas, antialias:true });
+    corridorRenderer.setSize(window.innerWidth, window.innerHeight);
+    corridorRenderer.setPixelRatio(window.devicePixelRatio);
+
+    corridorScene = new THREE.Scene();
+    corridorScene.background = new THREE.Color(0xcccccc);
+
+    corridorCamera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 100);
+    corridorCamera.position.set(0,1.5,0);
 
     // Luces
-    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
-    hemiLight.position.set(0, 20, 0);
-    scene.add(hemiLight);
+    const hemiLight = new THREE.HemisphereLight(0xffffff,0x444444,1);
+    corridorScene.add(hemiLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff,0.8);
+    dirLight.position.set(5,10,7);
+    corridorScene.add(dirLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    dirLight.position.set(5, 10, 7);
-    scene.add(dirLight);
-
-    // Crear pasillo
+    // Pasillo
     createCorridor();
 
-    // Cargar DamagedHelmet, elevándolo ~1m
+    // Cargar casco en el pasillo
     const loader = new GLTFLoader();
     loader.load(
       'https://threejs.org/examples/models/gltf/DamagedHelmet/glTF/DamagedHelmet.gltf',
-      (gltf) => {
+      gltf => {
         helmetModel = gltf.scene;
+        helmetModel.position.set(0,1,-10);
         helmetModel.scale.set(1,1,1);
-        helmetModel.position.set(0, 1, -10); // Y=1 para que no se hunda
-        scene.add(helmetModel);
+        corridorScene.add(helmetModel);
       },
       undefined,
-      (error) => console.error(error)
+      err => console.error(err)
     );
 
     // PointerLockControls
-    controls = new PointerLockControls(camera, renderer.domElement);
-    const blocker = document.getElementById('blocker');
-    const instructions = document.getElementById('instructions');
+    controls = new PointerLockControls(corridorCamera, corridorRenderer.domElement);
+    blocker = document.getElementById('blocker');
+    instructions = document.getElementById('instructions');
 
-    controls.addEventListener('lock', () => {
-      instructions.style.display = 'none';
-      blocker.style.display = 'none';
+    controls.addEventListener('lock', ()=>{
+      blocker.style.display='none';
     });
-    controls.addEventListener('unlock', () => {
-      blocker.style.display = 'block';
-      instructions.style.display = '';
+    controls.addEventListener('unlock', ()=>{
+      blocker.style.display='flex';
     });
-    blocker.addEventListener('click', () => {
-      controls.lock();
-    });
-    scene.add(controls.getObject());
+    blocker.addEventListener('click', ()=> controls.lock());
+
+    corridorScene.add(controls.getObject());
 
     // Teclado
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
 
-    // Raycaster (para clic en el casco)
-    raycaster = new THREE.Raycaster();
-    document.addEventListener('click', onMouseClick);
+    // Raycaster para clic
+    corridorRaycaster = new THREE.Raycaster();
+    document.addEventListener('click', onCorridorClick);
 
-    // Botón comprar
-    buyButton = document.getElementById('buyButton');
-    buyButton.addEventListener('click', () => {
-      alert('¡Producto agregado al carrito (demostración)!');
-    });
-
+    // Resize
     window.addEventListener('resize', onWindowResize);
   }
 
   function createCorridor() {
     // Suelo
-    const floorGeometry = new THREE.PlaneGeometry(corridorWidth, corridorLength);
-    const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x808080 });
-    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    floor.rotation.x = -Math.PI / 2;
-    floor.position.z = -corridorLength / 2; 
-    scene.add(floor);
+    const floorGeo = new THREE.PlaneGeometry(corridorWidth, corridorLength);
+    const floorMat = new THREE.MeshStandardMaterial({ color:0x808080 });
+    const floor = new THREE.Mesh(floorGeo, floorMat);
+    floor.rotation.x=-Math.PI/2;
+    floor.position.z = -corridorLength/2;
+    corridorScene.add(floor);
 
     // Techo
-    const ceilingGeometry = new THREE.PlaneGeometry(corridorWidth, corridorLength);
-    const ceilingMaterial = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
-    const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
-    ceiling.rotation.x = Math.PI / 2;
-    ceiling.position.y = corridorHeight;
-    ceiling.position.z = -corridorLength / 2;
-    scene.add(ceiling);
+    const ceilGeo = new THREE.PlaneGeometry(corridorWidth, corridorLength);
+    const ceilMat = new THREE.MeshStandardMaterial({ color:0xaaaaaa });
+    const ceiling = new THREE.Mesh(ceilGeo, ceilMat);
+    ceiling.rotation.x=Math.PI/2;
+    ceiling.position.y=corridorHeight;
+    ceiling.position.z=-corridorLength/2;
+    corridorScene.add(ceiling);
 
     // Pared izquierda
-    const wallGeom = new THREE.PlaneGeometry(corridorHeight, corridorLength);
-    const wallMat = new THREE.MeshStandardMaterial({ color: 0x999999 });
-    const leftWall = new THREE.Mesh(wallGeom, wallMat);
-    leftWall.rotation.y = Math.PI / 2;
-    leftWall.rotation.z = -Math.PI / 2;
-    leftWall.position.x = -corridorWidth / 2;
-    leftWall.position.z = -corridorLength / 2;
-    leftWall.position.y = corridorHeight / 2;
-    scene.add(leftWall);
+    const wallGeo = new THREE.PlaneGeometry(corridorHeight, corridorLength);
+    const wallMat = new THREE.MeshStandardMaterial({ color:0x999999 });
+    const leftWall = new THREE.Mesh(wallGeo, wallMat);
+    leftWall.rotation.y=Math.PI/2; 
+    leftWall.rotation.z=-Math.PI/2;
+    leftWall.position.x=-corridorWidth/2;
+    leftWall.position.z=-corridorLength/2;
+    leftWall.position.y=corridorHeight/2;
+    corridorScene.add(leftWall);
 
     // Pared derecha
-    const rightWall = new THREE.Mesh(wallGeom, wallMat);
-    rightWall.rotation.y = -Math.PI / 2;
-    rightWall.rotation.z = -Math.PI / 2;
-    rightWall.position.x = corridorWidth / 2;
-    rightWall.position.z = -corridorLength / 2;
-    rightWall.position.y = corridorHeight / 2;
-    scene.add(rightWall);
+    const rightWall = new THREE.Mesh(wallGeo, wallMat);
+    rightWall.rotation.y=-Math.PI/2; 
+    rightWall.rotation.z=-Math.PI/2;
+    rightWall.position.x=corridorWidth/2;
+    rightWall.position.z=-corridorLength/2;
+    rightWall.position.y=corridorHeight/2;
+    corridorScene.add(rightWall);
   }
 
-  function onKeyDown(event) {
-    switch (event.code) {
+  function onKeyDown(e){
+    switch(e.code){
       case 'ArrowUp':
-      case 'KeyW': moveForward = true; break;
+      case 'KeyW': moveForward=true; break;
       case 'ArrowLeft':
-      case 'KeyA': moveLeft = true; break;
+      case 'KeyA': moveLeft=true; break;
       case 'ArrowDown':
-      case 'KeyS': moveBackward = true; break;
+      case 'KeyS': moveBackward=true; break;
       case 'ArrowRight':
-      case 'KeyD': moveRight = true; break;
+      case 'KeyD': moveRight=true; break;
     }
   }
-  function onKeyUp(event) {
-    switch (event.code) {
+  function onKeyUp(e){
+    switch(e.code){
       case 'ArrowUp':
-      case 'KeyW': moveForward = false; break;
+      case 'KeyW': moveForward=false; break;
       case 'ArrowLeft':
-      case 'KeyA': moveLeft = false; break;
+      case 'KeyA': moveLeft=false; break;
       case 'ArrowDown':
-      case 'KeyS': moveBackward = false; break;
+      case 'KeyS': moveBackward=false; break;
       case 'ArrowRight':
-      case 'KeyD': moveRight = false; break;
+      case 'KeyD': moveRight=false; break;
     }
   }
 
-  function onMouseClick(event) {
-    if (!controls.isLocked) return; // Solo si estás en modo FPS
+  function onCorridorClick(ev){
+    if(!controls.isLocked) return;
+
     // Rayo desde el centro de la pantalla
-    const mouse = new THREE.Vector2(0, 0);
-    raycaster.setFromCamera(mouse, camera);
-
-    const intersects = raycaster.intersectObjects(scene.children, true);
-    if (intersects.length > 0 && helmetModel) {
-      for (let i = 0; i < intersects.length; i++) {
-        const obj = intersects[i].object;
-        if (isDescendantOf(obj, helmetModel)) {
-          console.log('¡Casco clickeado!');
-          buyButton.style.display = 'block';
+    corridorRaycaster.setFromCamera(new THREE.Vector2(0,0), corridorCamera);
+    const intersects = corridorRaycaster.intersectObjects(corridorScene.children,true);
+    if(intersects.length>0 && helmetModel){
+      for(let i=0; i<intersects.length; i++){
+        let obj = intersects[i].object;
+        if(isDescendantOf(obj, helmetModel)){
+          console.log('Casco clickeado → Abrir popup');
+          // Desbloqueamos pointer lock para usar el mouse libre en el popup
+          controls.unlock();
+          showPopup();
           break;
         }
       }
     }
   }
 
-  function isDescendantOf(child, parent) {
-    let current = child;
-    while (current) {
-      if (current === parent) return true;
-      current = current.parent;
+  // Animación FPS
+  function animateCorridor(){
+    requestAnimationFrame(animateCorridor);
+
+    if(controls.isLocked){
+      let step=0.1;
+      let mx=0, mz=0;
+      if(moveForward) mz -= step;
+      if(moveBackward) mz += step;
+      if(moveLeft) mx -= step;
+      if(moveRight) mx += step;
+
+      if(mx !== 0) controls.moveRight(mx);
+      if(mz !== 0) controls.moveForward(mz);
+
+      clampCorridor();
+    }
+
+    corridorRenderer.render(corridorScene, corridorCamera);
+  }
+
+  function clampCorridor(){
+    const halfW = corridorWidth/2 - 0.2;
+    if(corridorCamera.position.x < -halfW) corridorCamera.position.x=-halfW;
+    if(corridorCamera.position.x >  halfW) corridorCamera.position.x= halfW;
+
+    if(corridorCamera.position.z>0) corridorCamera.position.z=0;
+    let minZ=-corridorLength;
+    if(corridorCamera.position.z<minZ) corridorCamera.position.z=minZ;
+  }
+
+  // ----------------------------
+  //    POPUP (OrbitControls)
+  // ----------------------------
+  function initPopup(){
+    popupModal = document.getElementById('popupModal');
+    popupCanvas = document.getElementById('popupCanvas');
+    btnClose = document.getElementById('btnClose');
+    btnBuy = document.getElementById('btnBuy');
+
+    popupRenderer = new THREE.WebGLRenderer({ canvas: popupCanvas, antialias:true });
+    // Nota: ajustaremos el tamaño en showPopup()
+
+    popupScene = new THREE.Scene();
+    popupScene.background = new THREE.Color(0x222222);
+
+    popupCamera = new THREE.PerspectiveCamera(60, 1, 0.1, 100);
+    popupCamera.position.set(0, 0, 3);
+
+    // Luz en el popup
+    const popLight = new THREE.HemisphereLight(0xffffff,0x444444,1);
+    popupScene.add(popLight);
+
+    // Controles de órbita
+    popupControls = new OrbitControls(popupCamera, popupRenderer.domElement);
+    popupControls.enableDamping=true;
+    popupControls.dampingFactor=0.05;
+
+    // Botones
+    btnClose.onclick = hidePopup;
+    btnBuy.onclick = ()=>{
+      alert('¡Compraste el casco (demo)!');
+      hidePopup();
+    };
+  }
+
+  // Cargar el casco al mostrar el popup
+  // (Podrías clonar helmetModel si quisieras el "mismo" mesh, 
+  // pero aquí para simplicidad, volvemos a cargar. 
+  // O usas un global "helmetGltf" y clonas. 
+  // Esta vez lo cargamos de nuevo.)
+  function showPopup(){
+    popupModal.style.display='flex';
+
+    // Ajustar tamaño del renderer al container
+    let pw = popupCanvas.clientWidth;
+    let ph = popupCanvas.clientHeight;
+    popupRenderer.setSize(pw, ph);
+
+    // Recrear la escena del popup (limpia)
+    popupScene.clear(); 
+    popupCamera.position.set(0,0,3);
+    popupControls.reset();
+    popupControls.update();
+
+    // Luces
+    const popLight = new THREE.HemisphereLight(0xffffff,0x444444,1);
+    popupScene.add(popLight);
+
+    // Cargar o clonar el casco
+    const loader = new GLTFLoader();
+    loader.load(
+      'https://threejs.org/examples/models/gltf/DamagedHelmet/glTF/DamagedHelmet.gltf',
+      gltf => {
+        modelInPopup = gltf.scene;
+        modelInPopup.scale.set(1.2,1.2,1.2);
+        popupScene.add(modelInPopup);
+      },
+      undefined,
+      err=>console.error(err)
+    );
+
+    // Arrancamos la animacion del popup
+    animatePopup();
+  }
+
+  function hidePopup(){
+    popupModal.style.display='none';
+    // (Opcional) Limpia la escena
+    popupScene.clear();
+  }
+
+  function animatePopup(){
+    if(popupModal.style.display==='none'){
+      return; // si cerraron el popup, detenemos
+    }
+    requestAnimationFrame(animatePopup);
+
+    popupControls.update();
+    popupRenderer.render(popupScene, popupCamera);
+  }
+
+  // Función para verificar descendencia en la jerarquía
+  function isDescendantOf(child, parent){
+    let current=child;
+    while(current){
+      if(current===parent) return true;
+      current=current.parent;
     }
     return false;
   }
 
-  function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  }
+  function onWindowResize(){
+    // Redimensionar corridor
+    corridorRenderer.setSize(window.innerWidth, window.innerHeight);
+    corridorCamera.aspect = window.innerWidth/window.innerHeight;
+    corridorCamera.updateProjectionMatrix();
 
-  function animate() {
-    requestAnimationFrame(animate);
-
-    if (controls.isLocked) {
-      let step = 0.1;
-      let moveX = 0;
-      let moveZ = 0;
-
-      if (moveForward)  moveZ -= step;
-      if (moveBackward) moveZ += step;
-      if (moveLeft)     moveX -= step;
-      if (moveRight)    moveX += step;
-
-      if (moveX !== 0) controls.moveRight(moveX);
-      if (moveZ !== 0) controls.moveForward(moveZ);
-
-      clampCameraToCorridor();
+    // Redimensionar popup si está visible
+    if(popupModal.style.display!=='none'){
+      let pw = popupCanvas.clientWidth;
+      let ph = popupCanvas.clientHeight;
+      popupRenderer.setSize(pw, ph);
+      popupCamera.aspect = pw/ph;
+      popupCamera.updateProjectionMatrix();
     }
-
-    renderer.render(scene, camera);
   }
 
-  function clampCameraToCorridor() {
-    const halfW = corridorWidth / 2 - 0.2;
-    if (camera.position.x < -halfW) camera.position.x = -halfW;
-    if (camera.position.x >  halfW) camera.position.x =  halfW;
-
-    if (camera.position.z > 0) camera.position.z = 0;
-    const minZ = -corridorLength;
-    if (camera.position.z < minZ) camera.position.z = minZ;
-  }
 </script>
 </body>
 </html>
