@@ -2,9 +2,10 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>3D E-commerce MVP</title>
+  <title>3D E-commerce MVP con OrbitControls</title>
   <style>
     body { margin: 0; overflow: hidden; font-family: sans-serif; }
+    canvas { display: block; }
     #buyButton {
       position: absolute;
       top: 10px;
@@ -28,18 +29,17 @@
       border-radius: 4px;
       z-index: 998;
     }
-    canvas { display: block; }
   </style>
 </head>
 <body>
 
 <!-- Botón "Comprar" -->
-<button id="buyButton">Comprar</button>
+<button id="buyButton">Comprarrrr</button>
 
-<!-- Cuadro de texto informativo -->
-<div id="info">DamagedHelmet MVPPPPPP</div>
+<!-- Texto informativo -->
+<div id="info">DamagedHelmet MVP (con OrbitControls)</div>
 
-<!-- 1) Import Map: le dice al navegador cómo resolver 'three' -->
+<!-- 1) Import Map para resolver 'three' -->
 <script type="importmap">
 {
   "imports": {
@@ -48,31 +48,50 @@
 }
 </script>
 
-<!-- 2) Script principal en modo "module" -->
+<!-- 2) Script principal -->
 <script type="module">
-  // Importa el loader desde el CDN "examples/jsm"
-  // Como internamente hace `import 'three';`, el import map lo resuelve
+  /* 
+     OrbitControls y GLTFLoader están en examples/jsm/,
+     y por dentro hacen `import 'three'`. Gracias al import map,
+     el navegador sabe dónde buscar "three".
+  */
   import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/loaders/GLTFLoader.js';
-
-  // Para usar THREE, haremos:
+  import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/controls/OrbitControls.js';
   import * as THREE from 'three';
 
   let scene, camera, renderer;
   let model = null;
+  let controls = null;
 
   init();
   animate();
 
   function init() {
+    // Escena
     scene = new THREE.Scene();
     scene.background = new THREE.Color(0xcccccc);
 
-    camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(0, 1.6, 3);
+    // Cámara (con un poco de altura y alejamiento)
+    camera = new THREE.PerspectiveCamera(
+      45,
+      window.innerWidth / window.innerHeight,
+      0.1,
+      100
+    );
+    camera.position.set(0, 1, 4);
 
+    // Renderer
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
+
+    // Controles de órbita (para mover con el mouse o el dedo)
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;  // suaviza el movimiento
+    controls.dampingFactor = 0.05;
+    // Puedes ajustar los límites de distancia si quieres:
+    // controls.minDistance = 1.5;
+    // controls.maxDistance = 6;
 
     // Luces
     const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
@@ -89,7 +108,9 @@
       'https://threejs.org/examples/models/gltf/DamagedHelmet/glTF/DamagedHelmet.gltf',
       (gltf) => {
         model = gltf.scene;
-        model.scale.set(2, 2, 2);
+        // Escala reducida (por defecto es ~1,1,1).
+        // Ajusta a tu gusto si quieres que se vea más pequeño.
+        model.scale.set(1, 1, 1); 
         scene.add(model);
         console.log('Modelo DamagedHelmet cargado.');
       },
@@ -115,10 +136,10 @@
   function animate() {
     requestAnimationFrame(animate);
 
-    if (model) {
-      model.rotation.y += 0.005;
-    }
+    // Actualizar los controles
+    controls.update();
 
+    // Renderizar
     renderer.render(scene, camera);
   }
 </script>
