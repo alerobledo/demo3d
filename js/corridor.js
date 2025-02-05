@@ -6,38 +6,28 @@ import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/
 // Importamos showPopup (y/o hidePopup) desde popup.js
 import { showPopup } from './popup.js';
 
-/* Variables y constantes del corredor */
 let corridorRenderer, corridorScene, corridorCamera;
 let controls;
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
-let helmetModel = null;   // (aquí el "Duck" o lo que cargues)
+let helmetModel = null;  // En este caso, es el pato
 let corridorRaycaster;
 
-const corridorWidth = 4, 
-      corridorHeight = 3, 
+const corridorWidth = 4,
+      corridorHeight = 3,
       corridorLength = 20;
 
-// Para vincular con tu HTML
 let corridorCanvas, blocker, instructions;
 
-/* 
-  Exportamos las funciones principales 
-  que index.html llamará:
-    - initCorridor() : Inicializa todo 
-    - animateCorridor() : Bucle de animación
-*/
 export function initCorridor() {
   corridorCanvas = document.getElementById('corridorCanvas');
 
-  // Renderer
-  corridorRenderer = new THREE.WebGLRenderer({ 
-    canvas: corridorCanvas, 
-    antialias: true 
+  corridorRenderer = new THREE.WebGLRenderer({
+    canvas: corridorCanvas,
+    antialias: true
   });
   corridorRenderer.setSize(window.innerWidth, window.innerHeight);
   corridorRenderer.setPixelRatio(window.devicePixelRatio);
 
-  // Escena y cámara
   corridorScene = new THREE.Scene();
   corridorScene.background = new THREE.Color(0xcccccc);
 
@@ -47,17 +37,17 @@ export function initCorridor() {
   // Luces
   const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
   corridorScene.add(hemiLight);
+
   const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
   dirLight.position.set(5, 10, 7);
   corridorScene.add(dirLight);
 
-  // Construir pasillo
   createCorridor();
 
-  // Cargar el modelo (Duck, casco, etc.)
+  // Cargar Duck.glb
   const loader = new GLTFLoader();
   loader.load(
-    '/Duck.glb', // Ajusta la ruta según tu caso
+    '/Duck.glb',
     (gltf) => {
       helmetModel = gltf.scene;
       helmetModel.position.set(0, 1, -10);
@@ -68,7 +58,7 @@ export function initCorridor() {
     (err) => console.error(err)
   );
 
-  // PointerLockControls
+  // PointerLock
   controls = new PointerLockControls(corridorCamera, corridorRenderer.domElement);
   blocker = document.getElementById('blocker');
   instructions = document.getElementById('instructions');
@@ -83,7 +73,7 @@ export function initCorridor() {
 
   corridorScene.add(controls.getObject());
 
-  // Teclado y mouse
+  // Eventos de teclado y mouse
   document.addEventListener('keydown', onKeyDown);
   document.addEventListener('keyup', onKeyUp);
 
@@ -114,13 +104,8 @@ export function animateCorridor() {
   corridorRenderer.render(corridorScene, corridorCamera);
 }
 
-/* 
-   Funciones internas:
-   - createCorridor() : crea suelo, techo, paredes
-   - onCorridorClick(), onKeyDown(), onKeyUp(), clampCorridor(), onWindowResize()
-*/
+// -------------- Funciones internas --------------
 
-// Genera el pasillo
 function createCorridor() {
   // Suelo
   const floorGeo = new THREE.PlaneGeometry(corridorWidth, corridorLength);
@@ -160,7 +145,6 @@ function createCorridor() {
   corridorScene.add(rightWall);
 }
 
-// Detectar clic en el pato/casco
 function onCorridorClick(e) {
   if (!controls.isLocked) return;
 
@@ -168,14 +152,12 @@ function onCorridorClick(e) {
   const intersects = corridorRaycaster.intersectObjects(corridorScene.children, true);
   if (intersects.length > 0 && helmetModel) {
     for (let i = 0; i < intersects.length; i++) {
-      let obj = intersects[i].object;
+      const obj = intersects[i].object;
       if (isDescendantOf(obj, helmetModel)) {
-        console.log('Pato clickeado → abrir popup');
+        console.log('Duck clickeado → showPopup');
         controls.unlock();
-        // Llamar a showPopup() --> 
-        // OJO: showPopup() está en tu popup.js o en el main script 
-        // Si quieres llamarlo aquí, necesitarás importarlo 
-        // o emitir un evento. 
+        // Aquí llamamos a la función importada de popup.js
+        showPopup();
         break;
       }
     }
@@ -223,7 +205,7 @@ function onWindowResize() {
   corridorCamera.updateProjectionMatrix();
 }
 
-// Verificar descendencia en la jerarquía
+// Recorre la jerarquía de objetos para ver si child es descendiente de parent
 function isDescendantOf(child, parent) {
   let current = child;
   while (current) {
