@@ -11,11 +11,11 @@
     }
     #buyButton {
       position: absolute;
-      top: 10px;
-      left: 10px;
+      top: 10px; 
+      left: 10px; 
       padding: 10px 16px;
       background-color: #007bff;
-      color: #fff;
+      color: #fff; 
       border: none;
       cursor: pointer;
       font-size: 16px;
@@ -25,19 +25,23 @@
     #buyButton:hover {
       background-color: #0056b3;
     }
+    /* El lienzo donde se dibuja la escena 3D */
     canvas {
       display: block;
     }
   </style>
 </head>
 <body>
+  <!-- Botón de compra -->
   <button id="buyButton">Comprar</button>
-  
-  <script type="module">
-    import * as THREE from 'https://unpkg.com/three@0.146.0/build/three.module.js';
-    import { OrbitControls } from 'https://unpkg.com/three@0.146.0/examples/jsm/controls/OrbitControls.js';
 
-    import { GLTFLoader } from 'https://unpkg.com/three@0.146.0/examples/jsm/loaders/GLTFLoader.js';
+  <script type="module">
+    /* 
+      IMPORTAMOS Three.js y GLTFLoader DESDE UN CDN, 
+      usando rutas ABSOLUTAS con 'https://...' 
+    */
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.146.0/build/three.module.js';
+    import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/loaders/GLTFLoader.js';
 
     let scene, camera, renderer;
     let model;
@@ -46,9 +50,11 @@
     animate();
 
     function init() {
+      // Crear la escena
       scene = new THREE.Scene();
       scene.background = new THREE.Color(0xf0f0f0);
 
+      // Cámara
       camera = new THREE.PerspectiveCamera(
         45,
         window.innerWidth / window.innerHeight,
@@ -57,10 +63,12 @@
       );
       camera.position.set(0, 1.6, 3);
 
+      // Renderer
       renderer = new THREE.WebGLRenderer({ antialias: true });
       renderer.setSize(window.innerWidth, window.innerHeight);
       document.body.appendChild(renderer.domElement);
 
+      // Iluminación
       const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
       hemiLight.position.set(0, 20, 0);
       scene.add(hemiLight);
@@ -69,11 +77,13 @@
       dirLight.position.set(5, 10, 7);
       scene.add(dirLight);
 
+      // Cargar modelo DamagedHelmet
       const loader = new GLTFLoader();
       loader.load(
         'https://threejs.org/examples/models/gltf/DamagedHelmet/glTF/DamagedHelmet.gltf',
         function (gltf) {
           model = gltf.scene;
+          // Ajuste de escala
           model.scale.set(2, 2, 2);
           scene.add(model);
         },
@@ -83,8 +93,10 @@
         }
       );
 
+      // Evento resize
       window.addEventListener('resize', onWindowResize, false);
 
+      // Acción del botón "Comprar"
       const buyButton = document.getElementById('buyButton');
       buyButton.addEventListener('click', () => {
         alert('¡Producto agregado al carrito (demostración)!');
@@ -97,6 +109,7 @@
       renderer.setSize(window.innerWidth, window.innerHeight);
     }
 
+    // Bucle de animación
     function animate() {
       requestAnimationFrame(animate);
       if (model) {
