@@ -47,7 +47,7 @@ export function initCorridor() {
   // Cargar Duck.glb
   const loader = new GLTFLoader();
   loader.load(
-    '/Duck.glb',
+    'Duck.glb',
     (gltf) => {
       helmetModel = gltf.scene;
       helmetModel.position.set(0, 1, -10);
