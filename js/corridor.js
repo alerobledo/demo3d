@@ -1,15 +1,111 @@
-// Ajustamos las dimensiones del corredor:
-const corridorWidth = 6,
+/* js/corridor.js */
+import * as THREE from 'three';
+import { PointerLockControls } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/controls/PointerLockControls.js';
+import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/loaders/GLTFLoader.js';
+
+// Importamos la función showPopup del popup
+import { showPopup } from './popup.js';
+
+// Variables y constantes del corredor
+let corridorRenderer, corridorScene, corridorCamera;
+let controls;
+let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
+let model = null; // aquí cargaremos el Duck
+let corridorRaycaster;
+
+const corridorWidth = 6,   // Ancho aumentado de 4 a 6
       corridorHeight = 3,
-      corridorLength = 10;
+      corridorLength = 10; // Longitud reducida de 20 a 10
 
-// ... (resto del código)
+let corridorCanvas, blocker, instructions;
 
-// En initCorridor(), al crear la cámara:
-corridorCamera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-corridorCamera.position.set(0, 1.5, 0);
+export function initCorridor() {
+  corridorCanvas = document.getElementById('corridorCanvas');
 
-// La función createCorridor() seguirá usando corridorWidth y corridorLength:
+  corridorRenderer = new THREE.WebGLRenderer({
+    canvas: corridorCanvas,
+    antialias: true
+  });
+  corridorRenderer.setSize(window.innerWidth, window.innerHeight);
+  corridorRenderer.setPixelRatio(window.devicePixelRatio);
+
+  corridorScene = new THREE.Scene();
+  corridorScene.background = new THREE.Color(0xcccccc);
+
+  // Usamos un FOV menor para reducir la perspectiva
+  corridorCamera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+  corridorCamera.position.set(0, 1.5, 0);
+
+  // Luces
+  const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+  corridorScene.add(hemiLight);
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  dirLight.position.set(5, 10, 7);
+  corridorScene.add(dirLight);
+
+  // Crear el pasillo (suelo, techo y paredes)
+  createCorridor();
+
+  // Cargar el modelo (Duck) – como tus archivos JS están en "js/", usa '../Duck.glb'
+  const loader = new GLTFLoader();
+  loader.load(
+    '../Duck.glb',
+    (gltf) => {
+      model = gltf.scene;
+      model.position.set(0, 1, -10);
+      model.scale.set(1, 1, 1);
+      corridorScene.add(model);
+    },
+    undefined,
+    (err) => console.error(err)
+  );
+
+  // Configurar PointerLockControls
+  controls = new PointerLockControls(corridorCamera, corridorRenderer.domElement);
+  blocker = document.getElementById('blocker');
+  instructions = document.getElementById('instructions');
+
+  controls.addEventListener('lock', () => {
+    blocker.style.display = 'none';
+  });
+  controls.addEventListener('unlock', () => {
+    blocker.style.display = 'flex';
+  });
+  blocker.addEventListener('click', () => controls.lock());
+
+  corridorScene.add(controls.getObject());
+
+  // Eventos de teclado
+  document.addEventListener('keydown', onKeyDown);
+  document.addEventListener('keyup', onKeyUp);
+
+  // Raycaster para detectar clic en el modelo
+  corridorRaycaster = new THREE.Raycaster();
+  document.addEventListener('click', onCorridorClick);
+
+  window.addEventListener('resize', onWindowResize);
+}
+
+export function animateCorridor() {
+  requestAnimationFrame(animateCorridor);
+
+  if (controls.isLocked) {
+    let step = 0.1;
+    let mx = 0, mz = 0;
+    if (moveForward) mz -= step;
+    if (moveBackward) mz += step;
+    if (moveLeft) mx -= step;
+    if (moveRight) mx += step;
+
+    if (mx !== 0) controls.moveRight(mx);
+    if (mz !== 0) controls.moveForward(mz);
+
+    clampCorridor();
+  }
+
+  corridorRenderer.render(corridorScene, corridorCamera);
+}
+
 function createCorridor() {
   // Suelo
   const floorGeo = new THREE.PlaneGeometry(corridorWidth, corridorLength);
@@ -47,4 +143,72 @@ function createCorridor() {
   rightWall.position.z = -corridorLength / 2;
   rightWall.position.y = corridorHeight / 2;
   corridorScene.add(rightWall);
+}
+
+function onKeyDown(e) {
+  switch (e.code) {
+    case 'ArrowUp':
+    case 'KeyW': moveForward = true; break;
+    case 'ArrowLeft':
+    case 'KeyA': moveLeft = true; break;
+    case 'ArrowDown':
+    case 'KeyS': moveBackward = true; break;
+    case 'ArrowRight':
+    case 'KeyD': moveRight = true; break;
+  }
+}
+
+function onKeyUp(e) {
+  switch (e.code) {
+    case 'ArrowUp':
+    case 'KeyW': moveForward = false; break;
+    case 'ArrowLeft':
+    case 'KeyA': moveLeft = false; break;
+    case 'ArrowDown':
+    case 'KeyS': moveBackward = false; break;
+    case 'ArrowRight':
+    case 'KeyD': moveRight = false; break;
+  }
+}
+
+function onCorridorClick(e) {
+  if (!controls.isLocked) return;
+  corridorRaycaster.setFromCamera(new THREE.Vector2(0, 0), corridorCamera);
+  const intersects = corridorRaycaster.intersectObjects(corridorScene.children, true);
+  if (intersects.length > 0 && model) {
+    for (let i = 0; i < intersects.length; i++) {
+      const obj = intersects[i].object;
+      if (isDescendantOf(obj, model)) {
+        console.log('Duck clickeado → abrir popup');
+        controls.unlock();
+        showPopup(); // Llamada a la función del popup (importada)
+        break;
+      }
+    }
+  }
+}
+
+function clampCorridor() {
+  const halfW = corridorWidth / 2 - 0.2;
+  if (corridorCamera.position.x < -halfW) corridorCamera.position.x = -halfW;
+  if (corridorCamera.position.x > halfW) corridorCamera.position.x = halfW;
+
+  if (corridorCamera.position.z > 0) corridorCamera.position.z = 0;
+  const minZ = -corridorLength;
+  if (corridorCamera.position.z < minZ) corridorCamera.position.z = minZ;
+}
+
+function onWindowResize() {
+  corridorRenderer.setSize(window.innerWidth, window.innerHeight);
+  corridorCamera.aspect = window.innerWidth / window.innerHeight;
+  corridorCamera.updateProjectionMatrix();
+}
+
+function isDescendantOf(child, parent) {
+  let current = child;
+  while (current) {
+    if (current === parent) return true;
+    current = current.parent;
+  }
+  return false;
 }
