@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Pasillo 3D con PointerLockControls y selección de producto</title>
+  <title>Pasillo 3D - Correcciones</title>
   <style>
     body {
       margin: 0;
@@ -30,17 +30,7 @@
     #buyButton:hover {
       background-color: #0056b3;
     }
-    /* Overlay simple para indicar "Haz clic para empezar" */
-    #instructions {
-      position: absolute;
-      top: 50%; 
-      width: 100%;
-      text-align: center;
-      color: #fff;
-      font-size: 24px;
-      font-family: Arial, sans-serif;
-      user-select: none;
-    }
+    /* Overlay para indicar "Haz clic para iniciar" */
     #blocker {
       position: absolute;
       top:0; left:0; 
@@ -48,6 +38,15 @@
       height: 100%;
       background-color: rgba(0,0,0,0.7);
       z-index: 1000;
+    }
+    #instructions {
+      position: absolute;
+      top: 50%; 
+      width: 100%;
+      text-align: center;
+      color: #fff;
+      font-size: 24px;
+      user-select: none;
     }
   </style>
 </head>
@@ -64,7 +63,7 @@
 
 <button id="buyButton">Comprar</button>
 
-<!-- 1) Import map para resolver 'three' -->
+<!-- 1) Import map para que 'three' sea resuelto en los loaders/controls -->
 <script type="importmap">
 {
   "imports": {
@@ -74,239 +73,240 @@
 </script>
 
 <script type="module">
-/*
-  Usaremos PointerLockControls y GLTFLoader del directorio `examples/jsm/`.
-  Internamente hacen `import 'three';`, y el import map lo soluciona.
-*/
-import * as THREE from 'three';
-import { PointerLockControls } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/controls/PointerLockControls.js';
-import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/loaders/GLTFLoader.js';
+  import * as THREE from 'three';
+  import { PointerLockControls } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/controls/PointerLockControls.js';
+  import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/loaders/GLTFLoader.js';
 
-// Variables principales
-let camera, scene, renderer;
-let controls;           // PointerLockControls
-let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
-const velocity = new THREE.Vector3();
-const direction = new THREE.Vector3();
+  // Variables principales
+  let camera, scene, renderer;
+  let controls;
+  let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
 
-let raycaster;          // Para detectar clics sobre el casco
-let helmetModel = null; // Referencia al DamagedHelmet
-let buyButton;          // Botón comprar
+  // Medidas del pasillo
+  const corridorWidth = 4;   // ancho
+  const corridorHeight = 3;  // alto
+  const corridorLength = 20; // largo
 
-// Para el pasillo
-let corridorWidth = 4;  // ancho
-let corridorHeight = 3; // alto
-let corridorLength = 20; // largo
+  let helmetModel = null; // casco
+  let buyButton;          // Botón
+  let raycaster;          // para detectar clic en el casco
 
-init();
-animate();
+  init();
+  animate();
 
-function init() {
-  // Escena
-  scene = new THREE.Scene();
-  scene.background = new THREE.Color(0xcccccc);
+  function init() {
+    // Escena
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xcccccc);
 
-  // Cámara en el inicio del pasillo
-  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-  camera.position.set(0, 1.5, 0); // un poco de altura (1.5m)
+    // Cámara
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(0, 1.5, 0); // un poco de altura
 
-  // Renderer
-  renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
+    // Renderer
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
 
-  // Luz
-  const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
-  hemiLight.position.set(0, 20, 0);
-  scene.add(hemiLight);
+    // Luces
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+    hemiLight.position.set(0, 20, 0);
+    scene.add(hemiLight);
 
-  const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-  dirLight.position.set(5, 10, 7);
-  scene.add(dirLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(5, 10, 7);
+    scene.add(dirLight);
 
-  // Crear pasillo
-  createCorridor();
+    // Crear pasillo
+    createCorridor();
 
-  // Cargar DamagedHelmet
-  const loader = new GLTFLoader();
-  loader.load(
-    'https://threejs.org/examples/models/gltf/DamagedHelmet/glTF/DamagedHelmet.gltf',
-    (gltf) => {
-      helmetModel = gltf.scene;
-      // Ajustar escala / posición para que esté en el pasillo
-      helmetModel.scale.set(1, 1, 1);
-      // Lo ubicamos a mitad del pasillo, en el piso
-      helmetModel.position.set(0, 0, -10); 
-      scene.add(helmetModel);
-      console.log('Casco cargado');
-    },
-    undefined,
-    (error) => console.error(error)
-  );
+    // Cargar DamagedHelmet
+    const loader = new GLTFLoader();
+    loader.load(
+      'https://threejs.org/examples/models/gltf/DamagedHelmet/glTF/DamagedHelmet.gltf',
+      (gltf) => {
+        helmetModel = gltf.scene;
+        helmetModel.scale.set(1,1,1);
+        helmetModel.position.set(0, 0, -10);  // En medio del pasillo
+        scene.add(helmetModel);
+      },
+      undefined,
+      (error) => console.error(error)
+    );
 
-  // PointerLockControls
-  controls = new PointerLockControls(camera, renderer.domElement);
+    // PointerLockControls
+    controls = new PointerLockControls(camera, renderer.domElement);
+    const blocker = document.getElementById('blocker');
+    const instructions = document.getElementById('instructions');
 
-  const blocker = document.getElementById('blocker');
-  const instructions = document.getElementById('instructions');
+    controls.addEventListener('lock', () => {
+      instructions.style.display = 'none';
+      blocker.style.display = 'none';
+    });
+    controls.addEventListener('unlock', () => {
+      blocker.style.display = 'block';
+      instructions.style.display = '';
+    });
+    blocker.addEventListener('click', () => {
+      controls.lock();
+    });
+    scene.add(controls.getObject());
 
-  controls.addEventListener('lock', () => {
-    instructions.style.display = 'none';
-    blocker.style.display = 'none';
-  });
+    // Teclado
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
 
-  controls.addEventListener('unlock', () => {
-    blocker.style.display = 'block';
-    instructions.style.display = '';
-  });
+    // Raycaster (para clic en el casco)
+    raycaster = new THREE.Raycaster();
+    document.addEventListener('click', onMouseClick);
 
-  blocker.addEventListener('click', () => {
-    controls.lock();
-  });
+    // Botón comprar
+    buyButton = document.getElementById('buyButton');
+    buyButton.addEventListener('click', () => {
+      alert('¡Producto agregado al carrito (demostración)!');
+    });
 
-  scene.add(controls.getObject());
-
-  // Eventos de teclado
-  document.addEventListener('keydown', onKeyDown);
-  document.addEventListener('keyup', onKeyUp);
-
-  // Para detectar clic con Raycaster
-  raycaster = new THREE.Raycaster();
-  document.addEventListener('click', onMouseClick);
-
-  // Botón comprar
-  buyButton = document.getElementById('buyButton');
-  buyButton.addEventListener('click', () => {
-    alert('¡Producto agregado al carrito (demostración)!');
-  });
-
-  // Resize
-  window.addEventListener('resize', onWindowResize);
-}
-
-// Creación de un pasillo rectangular
-function createCorridor() {
-  // Suelo
-  const floorGeometry = new THREE.PlaneGeometry(corridorWidth, corridorLength);
-  const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x808080 });
-  const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-  floor.rotation.x = -Math.PI / 2;
-  floor.position.z = -corridorLength / 2; 
-  scene.add(floor);
-
-  // Techo
-  const ceilingGeometry = new THREE.PlaneGeometry(corridorWidth, corridorLength);
-  const ceilingMaterial = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
-  const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
-  ceiling.rotation.x = Math.PI / 2;
-  ceiling.position.y = corridorHeight;
-  ceiling.position.z = -corridorLength / 2;
-  scene.add(ceiling);
-
-  // Pared izquierda
-  const wallGeom = new THREE.PlaneGeometry(corridorHeight, corridorLength);
-  const wallMat = new THREE.MeshStandardMaterial({ color: 0x999999 });
-  const leftWall = new THREE.Mesh(wallGeom, wallMat);
-  leftWall.rotation.y = Math.PI / 2;
-  leftWall.rotation.z = -Math.PI / 2;
-  leftWall.position.x = -corridorWidth / 2;
-  leftWall.position.z = -corridorLength / 2;
-  leftWall.position.y = corridorHeight / 2;
-  scene.add(leftWall);
-
-  // Pared derecha
-  const rightWall = new THREE.Mesh(wallGeom, wallMat);
-  rightWall.rotation.y = -Math.PI / 2;
-  rightWall.rotation.z = -Math.PI / 2;
-  rightWall.position.x = corridorWidth / 2;
-  rightWall.position.z = -corridorLength / 2;
-  rightWall.position.y = corridorHeight / 2;
-  scene.add(rightWall);
-}
-
-// Eventos teclado
-function onKeyDown(event) {
-  switch (event.code) {
-    case 'ArrowUp':
-    case 'KeyW': moveForward = true; break;
-    case 'ArrowLeft':
-    case 'KeyA': moveLeft = true; break;
-    case 'ArrowDown':
-    case 'KeyS': moveBackward = true; break;
-    case 'ArrowRight':
-    case 'KeyD': moveRight = true; break;
+    window.addEventListener('resize', onWindowResize);
   }
-}
 
-function onKeyUp(event) {
-  switch (event.code) {
-    case 'ArrowUp':
-    case 'KeyW': moveForward = false; break;
-    case 'ArrowLeft':
-    case 'KeyA': moveLeft = false; break;
-    case 'ArrowDown':
-    case 'KeyS': moveBackward = false; break;
-    case 'ArrowRight':
-    case 'KeyD': moveRight = false; break;
+  function createCorridor() {
+    // Suelo
+    const floorGeometry = new THREE.PlaneGeometry(corridorWidth, corridorLength);
+    const floorMaterial = new THREE.MeshStandardMaterial({ color: 0x808080 });
+    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+    floor.rotation.x = -Math.PI / 2;
+    floor.position.z = -corridorLength / 2; 
+    scene.add(floor);
+
+    // Techo
+    const ceilingGeometry = new THREE.PlaneGeometry(corridorWidth, corridorLength);
+    const ceilingMaterial = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
+    const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
+    ceiling.rotation.x = Math.PI / 2;
+    ceiling.position.y = corridorHeight;
+    ceiling.position.z = -corridorLength / 2;
+    scene.add(ceiling);
+
+    // Pared izquierda
+    const wallGeom = new THREE.PlaneGeometry(corridorHeight, corridorLength);
+    const wallMat = new THREE.MeshStandardMaterial({ color: 0x999999 });
+    const leftWall = new THREE.Mesh(wallGeom, wallMat);
+    leftWall.rotation.y = Math.PI / 2;
+    leftWall.rotation.z = -Math.PI / 2;
+    leftWall.position.x = -corridorWidth / 2;
+    leftWall.position.z = -corridorLength / 2;
+    leftWall.position.y = corridorHeight / 2;
+    scene.add(leftWall);
+
+    // Pared derecha
+    const rightWall = new THREE.Mesh(wallGeom, wallMat);
+    rightWall.rotation.y = -Math.PI / 2;
+    rightWall.rotation.z = -Math.PI / 2;
+    rightWall.position.x = corridorWidth / 2;
+    rightWall.position.z = -corridorLength / 2;
+    rightWall.position.y = corridorHeight / 2;
+    scene.add(rightWall);
   }
-}
 
-// Clic para detectar si golpea el casco
-function onMouseClick(event) {
-  if (!controls.isLocked) return; // Solo si está en modo pointer lock
+  function onKeyDown(event) {
+    switch (event.code) {
+      case 'ArrowUp':
+      case 'KeyW': moveForward = true; break;
+      case 'ArrowLeft':
+      case 'KeyA': moveLeft = true; break;
+      case 'ArrowDown':
+      case 'KeyS': moveBackward = true; break;
+      case 'ArrowRight':
+      case 'KeyD': moveRight = true; break;
+    }
+  }
+  function onKeyUp(event) {
+    switch (event.code) {
+      case 'ArrowUp':
+      case 'KeyW': moveForward = false; break;
+      case 'ArrowLeft':
+      case 'KeyA': moveLeft = false; break;
+      case 'ArrowDown':
+      case 'KeyS': moveBackward = false; break;
+      case 'ArrowRight':
+      case 'KeyD': moveRight = false; break;
+    }
+  }
 
-  // Configuramos el rayo que sale desde la cámara hacia donde apunta el mouse
-  // Aquí lo simplificamos tomando el centro de la pantalla (0,0) en NDC
-  // Si quisieras un click en la posición real del mouse, tendrías que usar event.clientX, etc.
-  const mouse = new THREE.Vector2(0, 0);
+  function onMouseClick(event) {
+    // Solo si el puntero está bloqueado (modo FPS)
+    if (!controls.isLocked) return;
 
-  raycaster.setFromCamera(mouse, camera);
-  const intersects = raycaster.intersectObjects(scene.children, true);
+    // Rayo desde el centro de la pantalla
+    const mouse = new THREE.Vector2(0, 0);
+    raycaster.setFromCamera(mouse, camera);
 
-  if (intersects.length > 0) {
-    // Revisamos si uno de los objetos intersectados es el casco (o su hijo)
-    for (let i = 0; i < intersects.length; i++) {
-      const obj = intersects[i].object;
-      // Buscamos si "obj" es "helmetModel" o está dentro de "helmetModel"
-      if (helmetModel && helmetModel.children.includes(obj)) {
-        // Se hizo clic en el casco
-        console.log('¡Casco clickeado!');
-        buyButton.style.display = 'block'; // Mostrar botón "Comprar"
-        break;
+    const intersects = raycaster.intersectObjects(scene.children, true);
+    if (intersects.length > 0 && helmetModel) {
+      for (let i = 0; i < intersects.length; i++) {
+        const obj = intersects[i].object;
+        // Verificamos si el objeto clickeado es descendiente del casco
+        if (isDescendantOf(obj, helmetModel)) {
+          console.log('¡Casco clickeado!');
+          buyButton.style.display = 'block';
+          break;
+        }
       }
     }
   }
-}
 
-function onWindowResize() {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-}
-
-// Bucle de animación
-function animate() {
-  requestAnimationFrame(animate);
-
-  if (controls.isLocked) {
-    // Actualizar movimiento
-    const delta = 0.1; // tiempo fijo, simplificado
-    velocity.x -= velocity.x * 0.1 * delta;
-    velocity.z -= velocity.z * 0.1 * delta;
-
-    direction.z = Number(moveForward) - Number(moveBackward);
-    direction.x = Number(moveRight) - Number(moveLeft);
-    direction.normalize(); // para que diagonal no sea más rápido
-
-    if (moveForward || moveBackward) velocity.z -= direction.z * 0.2 * delta;
-    if (moveLeft || moveRight) velocity.x -= direction.x * 0.2 * delta;
-
-    controls.moveRight(-velocity.x);
-    controls.moveForward(-velocity.z);
+  // Función para saber si "child" está dentro del nodo "parent" (en cualquier nivel)
+  function isDescendantOf(child, parent) {
+    let current = child;
+    while (current) {
+      if (current === parent) return true;
+      current = current.parent;
+    }
+    return false;
   }
 
-  renderer.render(scene, camera);
-}
+  function onWindowResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+
+  // Movimiento FPS simple
+  function animate() {
+    requestAnimationFrame(animate);
+
+    if (controls.isLocked) {
+      let step = 0.1; // velocidad de movimiento
+      let moveX = 0;
+      let moveZ = 0;
+
+      if (moveForward)  moveZ -= step;
+      if (moveBackward) moveZ += step;
+      if (moveLeft)     moveX -= step;
+      if (moveRight)    moveX += step;
+
+      if (moveX !== 0) controls.moveRight(moveX);
+      if (moveZ !== 0) controls.moveForward(moveZ);
+
+      // Evitar atravesar paredes (clamp en x y z)
+      clampCameraToCorridor();
+    }
+
+    renderer.render(scene, camera);
+  }
+
+  // Limita la posición de la cámara dentro del pasillo
+  function clampCameraToCorridor() {
+    const halfW = corridorWidth / 2 - 0.2;
+    // El pasillo va de z=0 (frente) a z=-corridorLength (fondo)
+    // Evitamos salirnos de ese rango
+    if (camera.position.x < -halfW) camera.position.x = -halfW;
+    if (camera.position.x >  halfW) camera.position.x =  halfW;
+
+    if (camera.position.z > 0) camera.position.z = 0;
+    const minZ = -corridorLength;
+    if (camera.position.z < minZ) camera.position.z = minZ;
+  }
 </script>
 </body>
 </html>
