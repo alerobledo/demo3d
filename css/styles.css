@@ -1,0 +1,91 @@
+/* --------- styles.css --------- */
+
+/* Reseteo y fuente base */
+body {
+  margin: 0;
+  font-family: sans-serif;
+  overflow: hidden; /* Sin scroll */
+}
+
+/* Canvas del pasillo (FPS) */
+#corridorCanvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: #ccc;
+}
+
+/* Crosshair en el centro */
+#crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2000;
+  pointer-events: none;
+}
+
+/* Overlay pointer lock */
+#blocker {
+  position: absolute;
+  top: 0; 
+  left: 0; 
+  width: 100%; 
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  z-index: 1000;
+  display: flex;
+  align-items: center; 
+  justify-content: center;
+}
+#instructions {
+  color: #fff;
+  font-size: 24px;
+  text-align: center;
+  user-select: none;
+}
+
+/* Popup modal */
+#popupModal {
+  position: absolute;
+  top: 0; 
+  left: 0;
+  width: 100%; 
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8);
+  display: none; /* oculto por defecto */
+  z-index: 3000; /* por encima del canvas del pasillo */
+  align-items: center;
+  justify-content: center;
+}
+#popupContent {
+  position: relative;
+  width: 80vw; 
+  height: 80vh;
+  background: #eee;
+  display: flex; 
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+#popupCanvas {
+  width: 100%;
+  height: 100%;
+  background: #222;
+  display: block;
+}
+#popupButtons {
+  position: absolute;
+  top: 10px; 
+  right: 10px; 
+  display: flex; 
+  gap: 10px;
+}
+.popup-btn {
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+}
