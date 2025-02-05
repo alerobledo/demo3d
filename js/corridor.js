@@ -57,7 +57,7 @@ export function initCorridor() {
   // Cargar el modelo (Duck, casco, etc.)
   const loader = new GLTFLoader();
   loader.load(
-    'Duck.glb', // Ajusta la ruta según tu caso
+    '/Duck.glb', // Ajusta la ruta según tu caso
     (gltf) => {
       helmetModel = gltf.scene;
       helmetModel.position.set(0, 1, -10);
