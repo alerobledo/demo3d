@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Pasillo 3D - Correcciones</title>
+  <title>Pasillo 3D - Crosshair y casco elevado</title>
   <style>
     body {
       margin: 0;
@@ -12,6 +12,7 @@
     canvas {
       display: block;
     }
+
     /* Botón de compra, oculto por defecto */
     #buyButton {
       display: none; 
@@ -30,6 +31,7 @@
     #buyButton:hover {
       background-color: #0056b3;
     }
+
     /* Overlay para indicar "Haz clic para iniciar" */
     #blocker {
       position: absolute;
@@ -48,6 +50,16 @@
       font-size: 24px;
       user-select: none;
     }
+
+    /* Imagen del crosshair en el centro de la pantalla */
+    #crosshair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2000;
+      pointer-events: none; /* no bloquea clics */
+    }
   </style>
 </head>
 <body>
@@ -61,9 +73,16 @@
   </div>
 </div>
 
+<!-- Botón de compra -->
 <button id="buyButton">Comprar</button>
 
-<!-- 1) Import map para que 'three' sea resuelto en los loaders/controls -->
+<!-- Imagen del crosshair en el centro -->
+<div id="crosshair">
+  <!-- Ajusta el src a tu propia imagen de retícula -->
+  <img src="crosshair.png" width="32" height="32" alt="Crosshair">
+</div>
+
+<!-- 1) Import map para que 'three' sea resuelto en loaders/controls -->
 <script type="importmap">
 {
   "imports": {
@@ -83,13 +102,13 @@
   let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
 
   // Medidas del pasillo
-  const corridorWidth = 4;   // ancho
-  const corridorHeight = 3;  // alto
-  const corridorLength = 20; // largo
+  const corridorWidth = 4;
+  const corridorHeight = 3;
+  const corridorLength = 20;
 
-  let helmetModel = null; // casco
-  let buyButton;          // Botón
-  let raycaster;          // para detectar clic en el casco
+  let helmetModel = null; 
+  let buyButton;          
+  let raycaster;          
 
   init();
   animate();
@@ -101,7 +120,7 @@
 
     // Cámara
     camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(0, 1.5, 0); // un poco de altura
+    camera.position.set(0, 1.5, 0); // Altura ~1.5m
 
     // Renderer
     renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -120,14 +139,14 @@
     // Crear pasillo
     createCorridor();
 
-    // Cargar DamagedHelmet
+    // Cargar DamagedHelmet, elevándolo ~1m
     const loader = new GLTFLoader();
     loader.load(
       'https://threejs.org/examples/models/gltf/DamagedHelmet/glTF/DamagedHelmet.gltf',
       (gltf) => {
         helmetModel = gltf.scene;
         helmetModel.scale.set(1,1,1);
-        helmetModel.position.set(0, 0, -10);  // En medio del pasillo
+        helmetModel.position.set(0, 1, -10); // Y=1 para que no se hunda
         scene.add(helmetModel);
       },
       undefined,
@@ -234,9 +253,7 @@
   }
 
   function onMouseClick(event) {
-    // Solo si el puntero está bloqueado (modo FPS)
-    if (!controls.isLocked) return;
-
+    if (!controls.isLocked) return; // Solo si estás en modo FPS
     // Rayo desde el centro de la pantalla
     const mouse = new THREE.Vector2(0, 0);
     raycaster.setFromCamera(mouse, camera);
@@ -245,7 +262,6 @@
     if (intersects.length > 0 && helmetModel) {
       for (let i = 0; i < intersects.length; i++) {
         const obj = intersects[i].object;
-        // Verificamos si el objeto clickeado es descendiente del casco
         if (isDescendantOf(obj, helmetModel)) {
           console.log('¡Casco clickeado!');
           buyButton.style.display = 'block';
@@ -255,7 +271,6 @@
     }
   }
 
-  // Función para saber si "child" está dentro del nodo "parent" (en cualquier nivel)
   function isDescendantOf(child, parent) {
     let current = child;
     while (current) {
@@ -271,12 +286,11 @@
     renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
-  // Movimiento FPS simple
   function animate() {
     requestAnimationFrame(animate);
 
     if (controls.isLocked) {
-      let step = 0.1; // velocidad de movimiento
+      let step = 0.1;
       let moveX = 0;
       let moveZ = 0;
 
@@ -288,18 +302,14 @@
       if (moveX !== 0) controls.moveRight(moveX);
       if (moveZ !== 0) controls.moveForward(moveZ);
 
-      // Evitar atravesar paredes (clamp en x y z)
       clampCameraToCorridor();
     }
 
     renderer.render(scene, camera);
   }
 
-  // Limita la posición de la cámara dentro del pasillo
   function clampCameraToCorridor() {
     const halfW = corridorWidth / 2 - 0.2;
-    // El pasillo va de z=0 (frente) a z=-corridorLength (fondo)
-    // Evitamos salirnos de ese rango
     if (camera.position.x < -halfW) camera.position.x = -halfW;
     if (camera.position.x >  halfW) camera.position.x =  halfW;
 
