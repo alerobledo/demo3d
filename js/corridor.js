@@ -4,23 +4,23 @@ import { PointerLockControls } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/loaders/GLTFLoader.js';
 
-// Importamos la función showPopup del módulo popup.js
+// Importamos la función showPopup desde popup.js
 import { showPopup } from './popup.js';
 
-/* Función para detectar si estamos en un dispositivo móvil */
+/* Función para detectar dispositivos móviles */
 function isMobile() {
-  return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
-/* Dimensiones del recorrido (anillo) */
-const corridorSize = 20;   // Tamaño del cuadrado exterior (de -10 a 10)
-const innerSize = 12;      // Tamaño del cuadrado interior (de -6 a 6)
+// Dimensiones del corredor (recorrido cuadrado tipo "anillo")
+const corridorSize = 20;   // Cuadrado exterior (de -10 a 10)
+const innerSize = 12;      // Cuadrado interior (de -6 a 6)
 const corridorHeight = 3;  // Altura del corredor
 
 let corridorRenderer, corridorScene, corridorCamera;
 let controls;
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
-let model = null; // Modelo (Duck) a cargar
+let model = null; // Aquí se cargará el modelo (Duck)
 let corridorRaycaster;
 
 let corridorCanvas, blocker, instructions;
@@ -40,8 +40,7 @@ export function initCorridor() {
 
   // Usamos un FOV de 60° para suavizar la perspectiva.
   corridorCamera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-  // Posición inicial: colocar la cámara en el "pasillo", es decir, fuera del cuadrado interior.
-  // Con innerSize/2 = 6, un valor de x=8 la ubica en la zona del corredor.
+  // Posición inicial: fuera del cuadrado interior (por ejemplo, x=8)
   corridorCamera.position.set(8, 1.5, 0);
 
   // Luces
@@ -54,17 +53,15 @@ export function initCorridor() {
   // Crear el corredor (pasillo) en forma de anillo
   createCorridor();
 
-  // Cargar el modelo (Duck)
+  // Cargar el modelo (Duck) usando la URL proporcionada.
   const loader = new GLTFLoader();
-  // Dado que este archivo está en "js/" y Duck.glb en la raíz del proyecto,
-  // usamos la ruta absoluta que nos proporcionaste.
   loader.load(
     'https://alerobledo.github.io/demo3d/Duck.glb',
     (gltf) => {
       model = gltf.scene;
-      // Ubicar el modelo en la pared exterior (por ejemplo, en x = 9, en la zona del corredor)
+      // Colocar el modelo en la pared exterior, por ejemplo, en x=9 (cerca del límite exterior)
       model.position.set(9, 1, 0);
-      // Reducir la escala para que se vea como producto pequeño
+      // Reducir la escala para que se vea como un producto pequeño
       model.scale.set(0.3, 0.3, 0.3);
       corridorScene.add(model);
     },
@@ -72,17 +69,16 @@ export function initCorridor() {
     (err) => console.error(err)
   );
 
-  // Configurar controles según el dispositivo:
+  // Configurar controles según el dispositivo
   if (isMobile()) {
-    // En móviles, usamos OrbitControls (más amigable para táctil)
+    // En móviles, usamos OrbitControls (que no tienen getObject)
     controls = new OrbitControls(corridorCamera, corridorRenderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.1;
-    // Para OrbitControls, es recomendable desactivar el zoom (opcional) y el panning si deseas simular movimiento FPS
     controls.enableZoom = false;
     controls.enablePan = false;
   } else {
-    // En escritorio, usamos PointerLockControls para una experiencia FPS
+    // En escritorio, usamos PointerLockControls
     controls = new PointerLockControls(corridorCamera, corridorRenderer.domElement);
     blocker = document.getElementById('blocker');
     instructions = document.getElementById('instructions');
@@ -93,16 +89,16 @@ export function initCorridor() {
       blocker.style.display = 'flex';
     });
     blocker.addEventListener('click', () => controls.lock());
+    // Solo para PointerLockControls, usamos getObject() y lo añadimos a la escena:
+    corridorScene.add(controls.getObject());
   }
-  corridorScene.add(controls.getObject());
 
-  // Sólo en escritorio, añadimos eventos de teclado para mover la cámara.
+  // Sólo en escritorio, añadimos eventos de teclado
   if (!isMobile()) {
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
   }
 
-  // Configurar raycaster para detectar clic en el modelo
   corridorRaycaster = new THREE.Raycaster();
   document.addEventListener('click', onCorridorClick);
 
@@ -112,6 +108,7 @@ export function initCorridor() {
 export function animateCorridor() {
   requestAnimationFrame(animateCorridor);
 
+  // Solo en escritorio con PointerLockControls usamos el movimiento por teclado
   if (!isMobile() && controls.isLocked) {
     let step = 0.1;
     let mx = 0, mz = 0;
@@ -130,10 +127,7 @@ export function animateCorridor() {
 }
 
 /**
- * Crea el corredor en forma de anillo:
- * - Piso y techo: un plano del tamaño del cuadrado exterior.
- * - Paredes exteriores: en los límites del cuadrado exterior.
- * - Paredes interiores: en los límites del cuadrado interior, con un color clarito (0xd3d3d3).
+ * Crea el corredor (recorrido cuadrado tipo anillo) con piso, techo, paredes exteriores e interiores.
  */
 function createCorridor() {
   // Piso
@@ -177,7 +171,7 @@ function createCorridor() {
 
   // Paredes interiores (del hueco)
   const innerWallMat = new THREE.MeshStandardMaterial({ color: 0xd3d3d3, side: THREE.DoubleSide });
-  const innerBoundary = innerSize / 2; // =6 si innerSize es 12
+  const innerBoundary = innerSize / 2; // 6 si innerSize es 12
 
   // Frontal interior
   const innerWallGeoH = new THREE.PlaneGeometry(innerSize, corridorHeight);
@@ -206,17 +200,18 @@ function createCorridor() {
 }
 
 /**
- * Limita la posición de la cámara para que se mantenga en el corredor (en el anillo entre el cuadrado exterior e interior).
+ * Limita la posición de la cámara para que se mantenga en la región del corredor
+ * (el anillo entre el cuadrado exterior e interior).
  */
 function clampCameraToRing() {
-  const outer = corridorSize / 2 - 0.2; // Límite exterior (10 - 0.2 = 9.8)
-  const inner = innerSize / 2 + 0.2;      // Límite interior (6 + 0.2 = 6.2)
+  const outer = corridorSize / 2 - 0.2;  // Límite exterior (10 - 0.2 = 9.8)
+  const inner = innerSize / 2 + 0.2;       // Límite interior (6 + 0.2 = 6.2)
 
-  // Primero, clamp a los límites exteriores:
+  // Primero, clampa la posición para que no se salga del cuadrado exterior:
   corridorCamera.position.x = THREE.MathUtils.clamp(corridorCamera.position.x, -outer, outer);
   corridorCamera.position.z = THREE.MathUtils.clamp(corridorCamera.position.z, -outer, outer);
 
-  // Si la cámara cae dentro del cuadrado interior, la empujamos a la frontera más cercana:
+  // Si la cámara cae dentro del cuadrado interior, la empujamos hacia la frontera más cercana:
   if (Math.abs(corridorCamera.position.x) < inner && Math.abs(corridorCamera.position.z) < inner) {
     if (Math.abs(corridorCamera.position.x) < Math.abs(corridorCamera.position.z)) {
       corridorCamera.position.x = corridorCamera.position.x < 0 ? -inner : inner;
@@ -256,7 +251,7 @@ function onKeyUp(e) {
 
 function onCorridorClick(e) {
   if (!controls) return;
-  // Usamos un vector central (0,0) para detectar clic en el modelo
+  // Usamos el centro de la pantalla (0,0) para detectar clic en el modelo.
   corridorRaycaster.setFromCamera(new THREE.Vector2(0, 0), corridorCamera);
   const intersects = corridorRaycaster.intersectObjects(corridorScene.children, true);
   if (intersects.length > 0 && model) {
@@ -287,4 +282,9 @@ function isDescendantOf(child, parent) {
     current = current.parent;
   }
   return false;
+}
+
+/* Función auxiliar para detectar dispositivos móviles */
+function isMobile() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
