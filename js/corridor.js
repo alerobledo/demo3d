@@ -111,8 +111,24 @@ export function initCorridor() {
     let rotationData = { x: 0, y: 0 };
     rotationJoystick.on('move', (evt, data) => {
         if (data && data.vector) {
-            rotationData.x = data.vector.x;
-            rotationData.y = data.vector.y;
+           let angle = data.angle.degree;
+            if (angle >= 45 && angle < 135) {
+                // Up
+                rotationData.x = 0;
+                rotationData.y = 1;
+            } else if (angle >= 135 && angle < 225) {
+                // Left
+                rotationData.x = -1;
+                rotationData.y = 0;
+            } else if (angle >= 225 && angle < 315) {
+                // Down
+                rotationData.x = 0;
+                rotationData.y = -1;
+            } else {
+                // Right
+                rotationData.x = 1;
+                rotationData.y = 0;
+            }
         }
     });
     rotationJoystick.on('end', () => {
@@ -177,7 +193,7 @@ export function animateCorridor() {
     corridorCamera.position.add(moveOffset);
     clampCameraToRing();
 
-    // Rotate camera using rotation joystick data
+    // Rotate camera using restricted rotation joystick data
     let rotationX = window.mobileRotationData ? window.mobileRotationData.x : 0;
     let rotationY = window.mobileRotationData ? window.mobileRotationData.y : 0;
     corridorCamera.rotation.y -= rotationX * factor;
