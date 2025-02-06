@@ -97,7 +97,30 @@ export function initCorridor() {
     });
     // Guardamos joystickData en una variable global para usar en el animate loop
     window.mobileJoystickData = joystickData;
-  
+
+     // Create a second joystick for rotation
+    const rotationZone = document.createElement('div');
+    rotationZone.id = 'rotationZone';
+    document.body.appendChild(rotationZone);
+    const rotationJoystick = nipplejs.create({
+        zone: rotationZone,
+        mode: 'static',
+        position: { right: '50%', bottom: '50%' },
+        color: 'white'
+    });
+    let rotationData = { x: 0, y: 0 };
+    rotationJoystick.on('move', (evt, data) => {
+        if (data && data.vector) {
+            rotationData.x = data.vector.x;
+            rotationData.y = data.vector.y;
+        }
+    });
+    rotationJoystick.on('end', () => {
+        rotationData.x = 0;
+        rotationData.y = 0;
+    });
+    window.mobileRotationData = rotationData;
+    
     // Desactivamos cualquier otro control táctil
     // Ocultamos el overlay (blocker)
     let blocker = document.getElementById('blocker');
@@ -141,26 +164,25 @@ export function animateCorridor() {
   requestAnimationFrame(animateCorridor);
 
   if (isMobile()) {
-    // Usamos los datos del joystick para mover la cámara.
-    // Por ejemplo, mapeamos el valor x del joystick a movimiento lateral,
-    // y el valor y a movimiento forward/backward (invirtiendo y para que un toque hacia arriba avance).
-    const factor = 0.05; // Factor de sensibilidad (ajusta según prefieras)
+    const factor = 0.05;
     let dx = window.mobileJoystickData ? window.mobileJoystickData.x : 0;
     let dy = window.mobileJoystickData ? window.mobileJoystickData.y : 0;
-    
-    // Calculamos el vector de movimiento usando los vectores "right" y "forward" de la cámara.
     const right = new THREE.Vector3();
     right.crossVectors(corridorCamera.up, corridorCamera.getWorldDirection(new THREE.Vector3())).normalize();
     const forward = new THREE.Vector3();
     corridorCamera.getWorldDirection(forward).normalize();
-    
     const moveOffset = new THREE.Vector3();
     moveOffset.addScaledVector(right, dx * factor);
     moveOffset.addScaledVector(forward, -dy * factor);
-    
     corridorCamera.position.add(moveOffset);
-    // Puedes actualizar el target de OrbitControls si lo estás usando, pero aquí no lo usamos.
     clampCameraToRing();
+
+    // Rotate camera using rotation joystick data
+    let rotationX = window.mobileRotationData ? window.mobileRotationData.x : 0;
+    let rotationY = window.mobileRotationData ? window.mobileRotationData.y : 0;
+    corridorCamera.rotation.y -= rotationX * factor;
+    corridorCamera.rotation.x -= rotationY * factor;
+    corridorCamera.rotation.x = THREE.MathUtils.clamp(corridorCamera.rotation.x, -Math.PI / 2, Math.PI / 2);
   }
   
   // Solo en escritorio con PointerLockControls usamos el movimiento por teclado
