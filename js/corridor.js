@@ -76,14 +76,69 @@ export function initCorridor() {
     controls.enableDamping = true;
     controls.dampingFactor = 0.1;
     controls.enableZoom = false;
-    controls.enablePan = true; 
+    controls.enablePan = false; 
     controls.screenSpacePanning = true;
     
-    // Fijar un target para que la cámara mire hacia adelante
-    // (Usa la misma posición que la cámara, pero desplazado un poco en Z)
-    controls.target.set(corridorCamera.position.x, corridorCamera.position.y, corridorCamera.position.z - 1);
+    // Establecer un target fijo para que la cámara no se reoriente
+    // Usamos la posición actual de la cámara y la desplazamos un poco en Z para mirar hacia adelante
+    controls.target.copy(corridorCamera.position);
+    controls.target.z -= 1;
     controls.update();
   
+      // Listener para touchstart: prevenir comportamiento predeterminado si hay dos dedos
+    corridorRenderer.domElement.addEventListener('touchstart', (event) => {
+      if (event.touches.length === 2) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+
+    // Listener para touchmove para mover la cámara sin actualizar el target:
+  let prevTouches = null;
+  corridorRenderer.domElement.addEventListener('touchmove', (event) => {
+    if (event.touches.length === 2) {
+      event.preventDefault();
+      
+      // Almacenar las posiciones previas si no existen
+      if (!prevTouches) {
+        prevTouches = Array.from(event.touches).map(t => ({ clientX: t.clientX, clientY: t.clientY }));
+        return;
+      }
+      
+      const newTouches = Array.from(event.touches).map(t => ({ clientX: t.clientX, clientY: t.clientY }));
+      
+      // Calcular el desplazamiento promedio en X e Y
+      const deltaX = ((newTouches[0].clientX - prevTouches[0].clientX) + (newTouches[1].clientX - prevTouches[1].clientX)) / 2;
+      const deltaY = ((newTouches[0].clientY - prevTouches[0].clientY) + (newTouches[1].clientY - prevTouches[1].clientY)) / 2;
+      
+      prevTouches = newTouches;
+      
+      // Calculamos el vector de desplazamiento (panOffset) usando los vectores 'right' y 'forward' de la cámara.
+      const panOffset = new THREE.Vector3();
+      
+      // El vector "right" de la cámara:
+      const right = new THREE.Vector3();
+      right.crossVectors(corridorCamera.up, corridorCamera.getWorldDirection(new THREE.Vector3())).normalize();
+      
+      // El vector "forward" de la cámara:
+      const forward = new THREE.Vector3();
+      corridorCamera.getWorldDirection(forward).normalize();
+      
+      // Factor de sensibilidad: ajusta este valor para que el movimiento sea cómodo.
+      const factor = 0.01;
+      
+      // Movemos lateralmente según deltaX y adelante/atrás según deltaY.
+      panOffset.addScaledVector(right, -deltaX * factor);
+      panOffset.addScaledVector(forward, -deltaY * factor);
+      
+      // Actualizamos solo la posición de la cámara.
+      corridorCamera.position.add(panOffset);
+      // No actualizamos controls.target, para que se mantenga fijo.
+      
+      } else {
+        prevTouches = null;
+      }
+    }, { passive: false });
+    
     // Ocultamos el overlay para que la escena se muestre de inmediato
     let blocker = document.getElementById('blocker');
     if (blocker) {
