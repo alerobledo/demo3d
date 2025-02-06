@@ -15,7 +15,7 @@ let corridorRaycaster;
 
 const corridorWidth = 6,   // Ancho aumentado de 4 a 6
       corridorHeight = 3,
-      corridorLength = 10; // Longitud reducida de 20 a 10
+      corridorLength = 20; // Longitud reducida de 20 a 10
 
 let corridorCanvas, blocker, instructions;
 
