@@ -53,7 +53,7 @@ export function initCorridor() {
   const loader = new GLTFLoader();
   // Dado que corridor.js está en "js/" y el modelo está en la raíz, usamos '../Duck.glb'
   loader.load(
-    '../Duck.glb',
+    'https://alerobledo.github.io/demo3d/Duck.glb',
     (gltf) => {
       model = gltf.scene;
       // Colocamos el modelo en la pared derecha.
