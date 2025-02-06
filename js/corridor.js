@@ -52,9 +52,13 @@ export function initCorridor() {
     'https://alerobledo.github.io/demo3d/Duck.glb',
     (gltf) => {
       model = gltf.scene;
-      model.position.set(0, 1, -10);
-      model.scale.set(1, 1, 1);
-      corridorScene.add(model);
+       // Colocar el modelo a la derecha del pasillo (por ejemplo, x=2.5)
+          // y ajustar su posición en Y para que se alinee bien (por ejemplo, y=0.8)
+          // La posición en Z se mantiene en -10 para que esté en el fondo.
+    model.position.set(2.5, 0.8, -10);
+    // Reducir la escala para que se vea más pequeño (por ejemplo, 0.3 en cada eje)
+    model.scale.set(0.3, 0.3, 0.3);
+    corridorScene.add(model);
     },
     undefined,
     (err) => console.error(err)
