@@ -96,7 +96,7 @@ export function initCorridor() {
     corridorRenderer.domElement.addEventListener('touchmove', (event) => {
       if (event.touches.length === 2) {
         event.preventDefault();
-      }
+      
      // Si no tenemos posiciones previas, las almacenamos y salimos.
       if (!prevTouches) {
         prevTouches = Array.from(event.touches).map(t => ({ clientX: t.clientX, clientY: t.clientY }));
