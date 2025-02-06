@@ -76,9 +76,7 @@ export function initCorridor() {
     controls.enableDamping = true;
     controls.dampingFactor = 0.1;
     controls.enableZoom = false;
-    controls.enablePan = true; // ¡Habilitamos el panning para mover la cámara!
-    // Opcional: para que el panning se haga en el espacio de la pantalla (por defecto es true)
-    controls.screenSpacePanning = true;
+    controls.enablePan = true; 
     
     // Establecer un target adecuado para que la cámara mire hacia adelante
     // En lugar del target por defecto (0,0,0), lo fijamos en (8, 1.5, -1)
