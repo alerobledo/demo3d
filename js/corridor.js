@@ -84,61 +84,25 @@ export function initCorridor() {
     // (8,1.5,0) es la posición de la cámara, y el target se desplaza un poco en Z para que mire "al frente"
     controls.target.set(8, 1.5, -1);
     controls.update();
-      
+
+    // Listener para touchstart
+    corridorRenderer.domElement.addEventListener('touchstart', (event) => {
+      if (event.touches.length === 2) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
+    // Listener para touchmove: asegurarse de que, si hay dos dedos, se prevenga el comportamiento predeterminado.
+    corridorRenderer.domElement.addEventListener('touchmove', (event) => {
+      if (event.touches.length === 2) {
+        event.preventDefault();
+      }
+    }, { passive: false });
+    
      // Ocultamos el overlay de inicio para que la escena se muestre de inmediato
     blocker = document.getElementById('blocker');
     blocker.style.display = 'none';
 
-    // --- Agregamos un listener para touchmove para simular panning ---
-  let prevTouches = null;
-  corridorRenderer.domElement.addEventListener('touchmove', (event) => {
-      // Solo procesamos si hay dos dedos
-      if (event.touches.length === 2) {
-        event.preventDefault();
-        
-        // Si no tenemos posiciones previas, las almacenamos y salimos.
-        if (!prevTouches) {
-          prevTouches = Array.from(event.touches).map(t => ({ clientX: t.clientX, clientY: t.clientY }));
-          return;
-        }
-        
-        // Obtenemos las nuevas posiciones
-        const newTouches = Array.from(event.touches).map(t => ({ clientX: t.clientX, clientY: t.clientY }));
-        // Calculamos el promedio del desplazamiento en X y en Y
-        const deltaX = ((newTouches[0].clientX - prevTouches[0].clientX) + (newTouches[1].clientX - prevTouches[1].clientX)) / 2;
-        const deltaY = ((newTouches[0].clientY - prevTouches[0].clientY) + (newTouches[1].clientY - prevTouches[1].clientY)) / 2;
-        
-        // Actualizamos las posiciones previas
-        prevTouches = newTouches;
-        
-        // Para mover la cámara en la dirección deseada:
-        // - deltaX: movimiento lateral (izquierda/derecha)
-        // - deltaY: lo mapeamos a movimiento forward/backward (avanzar/retroceder)
-        const panOffset = new THREE.Vector3();
-        
-        // Calculamos el vector "right" de la cámara:
-        const right = new THREE.Vector3();
-        right.crossVectors(corridorCamera.up, corridorCamera.getWorldDirection(new THREE.Vector3())).normalize();
-        
-        // Calculamos el vector "forward" (la dirección en la que mira la cámara)
-        const forward = new THREE.Vector3();
-        corridorCamera.getWorldDirection(forward).normalize();
-        
-        // Ajustamos un factor de sensibilidad (ajusta este valor según lo que prefieras)
-        const factor = 0.01;
-        // Mover lateralmente (derecha/izquierda)
-        panOffset.addScaledVector(right, -deltaX * factor);
-        // Mover hacia adelante/atrás según el movimiento vertical de los dedos
-        panOffset.addScaledVector(forward, -deltaY * factor);
-        
-        // Actualizamos la posición de la cámara y el target de OrbitControls
-        corridorCamera.position.add(panOffset);
-        controls.target.add(panOffset);
-      } else {
-        // Si no hay dos dedos, reiniciamos prevTouches para evitar cálculos erróneos.
-        prevTouches = null;
-      }
-    }, { passive: false });
     
   } else {
     // En escritorio, usamos PointerLockControls
