@@ -3,29 +3,22 @@ import * as THREE from 'three';
 import { PointerLockControls } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/controls/PointerLockControls.js';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/loaders/GLTFLoader.js';
 
-// Importamos la función showPopup del módulo del popup
+// Importamos la función showPopup del módulo popup.js
 import { showPopup } from './popup.js';
 
-// Variables y constantes del corredor
+// Definición de dimensiones del corredor (recorrido cuadrado)
+const corridorSize = 20;   // Tamaño del cuadrado exterior (de -10 a 10)
+const innerSize = 12;      // Tamaño del cuadrado interior (de -6 a 6)
+const corridorHeight = 3;  // Altura del corredor
+
 let corridorRenderer, corridorScene, corridorCamera;
 let controls;
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
-let model = null; // aquí cargaremos el modelo (Duck, en este ejemplo)
+let model = null; // Modelo (Duck) a cargar
 let corridorRaycaster;
 
-const corridorWidth = 6,    // Este valor ya no se usará directamente,
-      corridorHeight = 3;   // pero lo dejamos para la altura.
-      
-// Nuevo parámetro: en lugar de corridorLength, definimos corridorSize para el cuadrado.
-const corridorSize = 20;    // Tamaño del cuadrado exterior
-const innerSize = 12;       // Tamaño del cuadrado interior (agujero)
-
-// Variables para elementos del DOM
 let corridorCanvas, blocker, instructions;
 
-/**
- * Inicializa la escena del corredor (ahora un recorrido cuadrado).
- */
 export function initCorridor() {
   corridorCanvas = document.getElementById('corridorCanvas');
 
@@ -39,9 +32,11 @@ export function initCorridor() {
   corridorScene = new THREE.Scene();
   corridorScene.background = new THREE.Color(0xcccccc);
 
-  // Reducir el FOV para suavizar la perspectiva (60° en lugar de 75°)
+  // Usamos un FOV de 60° para reducir la perspectiva
   corridorCamera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-  corridorCamera.position.set(0, 1.5, 0);
+  // Posicionamos la cámara en el corredor, en el lado derecho (por ejemplo, x = 8)
+  // El rango permitido es: outer = corridorSize/2 = 10, inner = innerSize/2 = 6, por lo que 8 es válido.
+  corridorCamera.position.set(8, 1.5, 0);
 
   // Luces
   const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
@@ -50,21 +45,22 @@ export function initCorridor() {
   dirLight.position.set(5, 10, 7);
   corridorScene.add(dirLight);
 
-  // Crear el corredor en forma de anillo (recorrido cuadrado)
+  // Crear el corredor: Para este ejemplo usaremos una geometría simple con piso, techo y paredes,
+  // pero luego la limitación (clamp) se hará en base a corridorSize e innerSize.
   createCorridor();
 
   // Cargar el modelo (Duck.glb)
   const loader = new GLTFLoader();
-  // Debido a que este archivo está en la carpeta js/ y Duck.glb en la raíz,
-  // usamos '../Duck.glb'
+  // Dado que corridor.js está en "js/" y el modelo está en la raíz, usamos '../Duck.glb'
   loader.load(
-    'https://alerobledo.github.io/demo3d/Duck.glb',
+    '../Duck.glb',
     (gltf) => {
       model = gltf.scene;
-      // Posición: en este caso, lo ubicamos a la derecha (por ejemplo, en x = 3)
-      // y un poco adelantado en z (para que se vea en el recorrido)
-      model.position.set(3, 1, -corridorSize / 2);
-      // Reducir la escala para que parezca un producto
+      // Colocamos el modelo en la pared derecha.
+      // Queremos que esté bien exhibido y no "metido" en la pared.
+      // Por ejemplo: x = 9 (cerca del borde exterior, que es 10), y z = 0.
+      model.position.set(9, 1, 0);
+      // Reducimos la escala para que se vea más pequeño (producto de supermercado)
       model.scale.set(0.3, 0.3, 0.3);
       corridorScene.add(model);
     },
@@ -98,69 +94,92 @@ export function initCorridor() {
   window.addEventListener('resize', onWindowResize);
 }
 
-/**
- * Crea el corredor en forma de recorrido cuadrado (anillo)
- * utilizando ExtrudeGeometry a partir de un Shape.
- */
-function createCorridor() {
-  // Creamos una forma que es un cuadrado con un agujero (otro cuadrado)
-  const outerSize = corridorSize;    // Por ejemplo, 20 unidades
-  const innerSizeLocal = innerSize;    // Por ejemplo, 12 unidades
-
-  // Definir la forma del cuadrado exterior en el plano XY
-  const shape = new THREE.Shape();
-  shape.moveTo(-outerSize / 2, -outerSize / 2);
-  shape.lineTo(outerSize / 2, -outerSize / 2);
-  shape.lineTo(outerSize / 2, outerSize / 2);
-  shape.lineTo(-outerSize / 2, outerSize / 2);
-  shape.lineTo(-outerSize / 2, -outerSize / 2);
-
-  // Definir el agujero (cuadrado interior) en el mismo plano
-  const hole = new THREE.Path();
-  hole.moveTo(-innerSizeLocal / 2, -innerSizeLocal / 2);
-  hole.lineTo(-innerSizeLocal / 2, innerSizeLocal / 2);
-  hole.lineTo(innerSizeLocal / 2, innerSizeLocal / 2);
-  hole.lineTo(innerSizeLocal / 2, -innerSizeLocal / 2);
-  hole.lineTo(-innerSizeLocal / 2, -innerSizeLocal / 2);
-  shape.holes.push(hole);
-
-  const extrudeSettings = {
-    steps: 1,
-    depth: corridorHeight, // La "altura" de la extrusión, que serán las paredes
-    bevelEnabled: false
-  };
-
-  // Crear la geometría extruida
-  const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-  // La extrusión por defecto va en el eje Z, queremos que vaya en Y, así que rotamos:
-  geometry.rotateX(-Math.PI / 2);
-
-  // Material para el corredor; DoubleSide para que se vean ambos lados
-  const material = new THREE.MeshStandardMaterial({ color: 0x808080, side: THREE.DoubleSide });
-  const corridorMesh = new THREE.Mesh(geometry, material);
-
-  // Añadimos la malla a la escena
-  corridorScene.add(corridorMesh);
-}
-
 export function animateCorridor() {
   requestAnimationFrame(animateCorridor);
 
   if (controls.isLocked) {
     let step = 0.1;
     let mx = 0, mz = 0;
-    if (moveForward)  mz -= step;
+    if (moveForward) mz -= step;
     if (moveBackward) mz += step;
-    if (moveLeft)     mx -= step;
-    if (moveRight)    mx += step;
+    if (moveLeft) mx -= step;
+    if (moveRight) mx += step;
 
     if (mx !== 0) controls.moveRight(mx);
     if (mz !== 0) controls.moveForward(mz);
 
-    clampCorridor();
+    clampCameraToCorridor();
   }
 
   corridorRenderer.render(corridorScene, corridorCamera);
+}
+
+/**
+ * Función para "clampeo" de la cámara.
+ * Se limita la posición de la cámara para que permanezca:
+ * - Dentro del cuadrado exterior (corridorSize/2 = 10)
+ * - Fuera del cuadrado interior (innerSize/2 = 6)
+ */
+function clampCameraToCorridor() {
+  const outer = corridorSize / 2 - 0.2; // margen exterior
+  // Clampea la posición dentro del cuadrado exterior
+  corridorCamera.position.x = THREE.MathUtils.clamp(corridorCamera.position.x, -outer, outer);
+  corridorCamera.position.z = THREE.MathUtils.clamp(corridorCamera.position.z, -outer, outer);
+
+  const inner = innerSize / 2 + 0.2; // margen interior
+  // Si la cámara está dentro del cuadrado interior, la empujamos hacia la frontera más cercana
+  if (Math.abs(corridorCamera.position.x) < inner && Math.abs(corridorCamera.position.z) < inner) {
+    if (Math.abs(corridorCamera.position.x) < Math.abs(corridorCamera.position.z)) {
+      corridorCamera.position.x = (corridorCamera.position.x < 0 ? -inner : inner);
+    } else {
+      corridorCamera.position.z = (corridorCamera.position.z < 0 ? -inner : inner);
+    }
+  }
+}
+
+/**
+ * Crea el corredor (en este ejemplo, se simula un recorrido cuadrado).
+ * Aquí se crean piso, techo y paredes usando planos simples.
+ */
+function createCorridor() {
+  // Suelo
+  const floorGeo = new THREE.PlaneGeometry(corridorSize, corridorSize);
+  const floorMat = new THREE.MeshStandardMaterial({ color: 0x808080 });
+  const floor = new THREE.Mesh(floorGeo, floorMat);
+  floor.rotation.x = -Math.PI / 2;
+  floor.position.y = 0;
+  corridorScene.add(floor);
+
+  // Techo
+  const ceilGeo = new THREE.PlaneGeometry(corridorSize, corridorSize);
+  const ceilMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa });
+  const ceiling = new THREE.Mesh(ceilGeo, ceilMat);
+  ceiling.rotation.x = Math.PI / 2;
+  ceiling.position.y = corridorHeight;
+  corridorScene.add(ceiling);
+
+  // Paredes: creamos cuatro paredes en cada lado del cuadrado exterior
+  const wallGeo = new THREE.PlaneGeometry(corridorSize, corridorHeight);
+  const wallMat = new THREE.MeshStandardMaterial({ color: 0x999999 });
+  // Pared frontal (z = -outer)
+  const frontWall = new THREE.Mesh(wallGeo, wallMat);
+  frontWall.position.set(0, corridorHeight / 2, -corridorSize / 2);
+  corridorScene.add(frontWall);
+  // Pared trasera (z = outer)
+  const backWall = new THREE.Mesh(wallGeo, wallMat);
+  backWall.rotation.y = Math.PI;
+  backWall.position.set(0, corridorHeight / 2, corridorSize / 2);
+  corridorScene.add(backWall);
+  // Pared izquierda (x = -outer)
+  const leftWall = new THREE.Mesh(wallGeo, wallMat);
+  leftWall.rotation.y = Math.PI / 2;
+  leftWall.position.set(-corridorSize / 2, corridorHeight / 2, 0);
+  corridorScene.add(leftWall);
+  // Pared derecha (x = outer)
+  const rightWall = new THREE.Mesh(wallGeo, wallMat);
+  rightWall.rotation.y = -Math.PI / 2;
+  rightWall.position.set(corridorSize / 2, corridorHeight / 2, 0);
+  corridorScene.add(rightWall);
 }
 
 function onKeyDown(e) {
@@ -199,23 +218,11 @@ function onCorridorClick(e) {
       if (isDescendantOf(obj, model)) {
         console.log('Duck clickeado → abrir popup');
         controls.unlock();
-        showPopup(); // Función importada desde popup.js
+        showPopup();
         break;
       }
     }
   }
-}
-
-function clampCorridor() {
-  // Para un recorrido cuadrado, podríamos limitar la posición de la cámara
-  // al interior de la forma exterior del corredor.
-  const halfOuter = corridorSize / 2 - 0.2;
-  if (corridorCamera.position.x < -halfOuter) corridorCamera.position.x = -halfOuter;
-  if (corridorCamera.position.x > halfOuter) corridorCamera.position.x = halfOuter;
-
-  const halfOuterZ = corridorSize / 2 - 0.2;
-  if (corridorCamera.position.z < -halfOuterZ) corridorCamera.position.z = -halfOuterZ;
-  if (corridorCamera.position.z > halfOuterZ) corridorCamera.position.z = halfOuterZ;
 }
 
 function onWindowResize() {
