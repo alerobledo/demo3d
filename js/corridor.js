@@ -283,8 +283,3 @@ function isDescendantOf(child, parent) {
   }
   return false;
 }
-
-/* Función auxiliar para detectar dispositivos móviles */
-function isMobile() {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-}
