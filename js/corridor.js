@@ -77,6 +77,9 @@ export function initCorridor() {
     controls.dampingFactor = 0.1;
     controls.enableZoom = false;
     controls.enablePan = false;
+     // Ocultamos el overlay de inicio para que la escena se muestre de inmediato
+    blocker = document.getElementById('blocker');
+    blocker.style.display = 'none';
   } else {
     // En escritorio, usamos PointerLockControls
     controls = new PointerLockControls(corridorCamera, corridorRenderer.domElement);
