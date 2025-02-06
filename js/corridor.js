@@ -106,19 +106,6 @@ export function initCorridor() {
     }
     
     // (No usamos OrbitControls en móviles con joystick)
-  } else {
-    // En escritorio, usamos PointerLockControls
-    controls = new PointerLockControls(corridorCamera, corridorRenderer.domElement);
-    blocker = document.getElementById('blocker');
-    instructions = document.getElementById('instructions');
-    controls.addEventListener('lock', () => {
-      blocker.style.display = 'none';
-    });
-    controls.addEventListener('unlock', () => {
-      blocker.style.display = 'flex';
-    });
-    blocker.addEventListener('click', () => controls.lock());
-    corridorScene.add(controls.getObject()); 
   
   } else {
     // En escritorio, usamos PointerLockControls
