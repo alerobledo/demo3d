@@ -77,6 +77,12 @@ export function initCorridor() {
     controls.dampingFactor = 0.1;
     controls.enableZoom = false;
     controls.enablePan = false;
+    // Establecer un target adecuado para que la cámara mire hacia adelante
+    // En lugar del target por defecto (0,0,0), lo fijamos en (8, 1.5, -1)
+    // (8,1.5,0) es la posición de la cámara, y el target se desplaza un poco en Z para que mire "al frente"
+    controls.target.set(8, 1.5, -1);
+    controls.update();
+      
      // Ocultamos el overlay de inicio para que la escena se muestre de inmediato
     blocker = document.getElementById('blocker');
     blocker.style.display = 'none';
