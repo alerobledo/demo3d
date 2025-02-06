@@ -171,6 +171,12 @@ export function initCorridor() {
 export function animateCorridor() {
   requestAnimationFrame(animateCorridor);
 
+  if (isMobile()) {
+    // En cada frame, forzamos el target fijo
+    controls.target.copy(fixedTarget);
+    controls.update();
+  }
+  
   // Solo en escritorio con PointerLockControls usamos el movimiento por teclado
   if (!isMobile() && controls.isLocked) {
     let step = 0.1;
