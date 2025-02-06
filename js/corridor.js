@@ -71,83 +71,38 @@ export function initCorridor() {
 
   // Configurar controles según el dispositivo
   if (isMobile()) {
-    // En móviles, usamos OrbitControls (que no tienen getObject)
+    // Usamos OrbitControls en móviles
     controls = new OrbitControls(corridorCamera, corridorRenderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.1;
     controls.enableZoom = false;
     controls.enablePan = false; 
-      // Opcional: para que el panning se haga en el espacio de la pantalla (por defecto es true)
     controls.screenSpacePanning = true;
-    // Establecer un target adecuado para que la cámara mire hacia adelante
-    // En lugar del target por defecto (0,0,0), lo fijamos en (8, 1.5, -1)
-    // (8,1.5,0) es la posición de la cámara, y el target se desplaza un poco en Z para que mire "al frente"
-    controls.target.set(8, 1.5, -1);
+    
+    // Fijar un target para que la cámara mire hacia adelante
+    // (Usa la misma posición que la cámara, pero desplazado un poco en Z)
+    controls.target.set(corridorCamera.position.x, corridorCamera.position.y, corridorCamera.position.z - 1);
     controls.update();
-
-    // Listener para touchstart
+  
+    // Prevenir el comportamiento por defecto en gestos multitáctiles
     corridorRenderer.domElement.addEventListener('touchstart', (event) => {
       if (event.touches.length === 2) {
         event.preventDefault();
       }
     }, { passive: false });
     
-        
-     // Ocultamos el overlay de inicio para que la escena se muestre de inmediato
-    blocker = document.getElementById('blocker');
-    blocker.style.display = 'none';
-
-    // --- Agregamos un listener para touchmove para simular panning ---
-    let prevTouches = null;
     corridorRenderer.domElement.addEventListener('touchmove', (event) => {
-      // Solo procesamos si hay dos dedos
       if (event.touches.length === 2) {
         event.preventDefault();
-        
-        // Si no tenemos posiciones previas, las almacenamos y salimos.
-        if (!prevTouches) {
-          prevTouches = Array.from(event.touches).map(t => ({ clientX: t.clientX, clientY: t.clientY }));
-          return;
-        }
-        
-        // Obtenemos las nuevas posiciones
-        const newTouches = Array.from(event.touches).map(t => ({ clientX: t.clientX, clientY: t.clientY }));
-        // Calculamos el promedio del desplazamiento en X y en Y
-        const deltaX = ((newTouches[0].clientX - prevTouches[0].clientX) + (newTouches[1].clientX - prevTouches[1].clientX)) / 2;
-        const deltaY = ((newTouches[0].clientY - prevTouches[0].clientY) + (newTouches[1].clientY - prevTouches[1].clientY)) / 2;
-        
-        // Actualizamos las posiciones previas
-        prevTouches = newTouches;
-        
-        // Para mover la cámara en la dirección deseada:
-        // - deltaX: movimiento lateral (izquierda/derecha)
-        // - deltaY: lo mapeamos a movimiento forward/backward (avanzar/retroceder)
-        const panOffset = new THREE.Vector3();
-        
-        // Calculamos el vector "right" de la cámara:
-        const right = new THREE.Vector3();
-        right.crossVectors(corridorCamera.up, corridorCamera.getWorldDirection(new THREE.Vector3())).normalize();
-        
-        // Calculamos el vector "forward" (la dirección en la que mira la cámara)
-        const forward = new THREE.Vector3();
-        corridorCamera.getWorldDirection(forward).normalize();
-        
-        // Ajustamos un factor de sensibilidad (ajusta este valor según lo que prefieras)
-        const factor = 0.01;
-        // Mover lateralmente (derecha/izquierda)
-        panOffset.addScaledVector(right, -deltaX * factor);
-        // Mover hacia adelante/atrás según el movimiento vertical de los dedos
-        panOffset.addScaledVector(forward, -deltaY * factor);
-        
-        // Actualizamos la posición de la cámara y el target de OrbitControls
-        corridorCamera.position.add(panOffset);
-        controls.target.add(panOffset);
-      } else {
-        // Si no hay dos dedos, reiniciamos prevTouches para evitar cálculos erróneos.
-        prevTouches = null;
       }
     }, { passive: false });
     
+    // Ocultar el overlay de inicio para móviles
+    blocker = document.getElementById('blocker');
+    if (blocker) {
+      blocker.style.display = 'none';
+    }
+  
   } else {
     // En escritorio, usamos PointerLockControls
     controls = new PointerLockControls(corridorCamera, corridorRenderer.domElement);
