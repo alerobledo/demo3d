@@ -76,7 +76,7 @@ export function initCorridor() {
     controls.enableDamping = true;
     controls.dampingFactor = 0.1;
     controls.enableZoom = false;
-    controls.enablePan = false; 
+    controls.enablePan = true; 
     controls.screenSpacePanning = true;
     
     // Fijar un target para que la cámara mire hacia adelante
@@ -84,21 +84,8 @@ export function initCorridor() {
     controls.target.set(corridorCamera.position.x, corridorCamera.position.y, corridorCamera.position.z - 1);
     controls.update();
   
-    // Prevenir el comportamiento por defecto en gestos multitáctiles
-    corridorRenderer.domElement.addEventListener('touchstart', (event) => {
-      if (event.touches.length === 2) {
-        event.preventDefault();
-      }
-    }, { passive: false });
-    
-    corridorRenderer.domElement.addEventListener('touchmove', (event) => {
-      if (event.touches.length === 2) {
-        event.preventDefault();
-      }
-    }, { passive: false });
-    
-    // Ocultar el overlay de inicio para móviles
-    blocker = document.getElementById('blocker');
+    // Ocultamos el overlay para que la escena se muestre de inmediato
+    let blocker = document.getElementById('blocker');
     if (blocker) {
       blocker.style.display = 'none';
     }
