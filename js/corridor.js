@@ -101,6 +101,8 @@ export function initCorridor() {
 
   corridorRaycaster = new THREE.Raycaster();
   document.addEventListener('click', onCorridorClick);
+  document.addEventListener('touchend', onCorridorClick);
+
 
   window.addEventListener('resize', onWindowResize);
 }
