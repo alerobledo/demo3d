@@ -112,7 +112,9 @@ export function initCorridor() {
     rotationJoystick.on('move', (evt, data) => {
         if (data && data.vector) {
            let angle = data.angle.degree;
-            if (angle >= 45 && angle < 135) {
+           // Normalize the angle to be within the range [0, 360)
+           angle = (angle + 360) % 360;
+           if (angle >= 45 && angle < 135) {
                 // Up
                 rotationData.x = 0;
                 rotationData.y = 1;
@@ -180,7 +182,7 @@ export function animateCorridor() {
   requestAnimationFrame(animateCorridor);
 
   if (isMobile()) {
-    const factor = 0.05;
+    const factor = 0.025;
     let dx = window.mobileJoystickData ? window.mobileJoystickData.x : 0;
     let dy = window.mobileJoystickData ? window.mobileJoystickData.y : 0;
     const right = new THREE.Vector3();
