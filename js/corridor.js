@@ -71,72 +71,54 @@ export function initCorridor() {
 
   // Configurar controles según el dispositivo
   if (isMobile()) {
-    // Usamos OrbitControls en móviles
-    controls = new OrbitControls(corridorCamera, corridorRenderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.1;
-    controls.enableZoom = false;
-    controls.enablePan = false; 
-    controls.screenSpacePanning = true;
+    // En móviles, en lugar de usar OrbitControls para todo, usaremos un joystick virtual
+    // Crearemos el joystick en el contenedor con id "joystickZone"
+    const joystickZone = document.getElementById('joystickZone');
+    // Crea el joystick usando nipplejs en modo "static"
+    const joystick = nipplejs.create({
+      zone: joystickZone,
+      mode: 'static',
+      position: { left: '50%', bottom: '50%' },
+      color: 'white'
+    });
     
-     // Definimos un target fijo para que la cámara no se reoriente
-    const fixedTarget = new THREE.Vector3(corridorCamera.position.x, corridorCamera.position.y, corridorCamera.position.z - 1);
-    controls.target.copy(fixedTarget);
-    controls.update();
-    
-    // Listener para touchstart
-    corridorRenderer.domElement.addEventListener('touchstart', (event) => {
-      if (event.touches.length === 2) {
-        event.preventDefault();
+    // Variable para almacenar el movimiento del joystick (vector normalizado)
+    let joystickData = { x: 0, y: 0 };
+    // Al mover el joystick, actualizamos joystickData
+    joystick.on('move', (evt, data) => {
+      if (data && data.vector) {
+        joystickData.x = data.vector.x; // Valores entre -1 y 1
+        joystickData.y = data.vector.y; // Valores entre -1 y 1
       }
-    }, { passive: false });
-
-    // Listener para touchmove para mover la cámara sin actualizar el target
-    let prevTouches = null;
-    corridorRenderer.domElement.addEventListener('touchmove', (event) => {
-      if (event.touches.length === 2) {
-        event.preventDefault();
-        
-        if (!prevTouches) {
-          prevTouches = Array.from(event.touches).map(t => ({ clientX: t.clientX, clientY: t.clientY }));
-          return;
-        }
-        
-        const newTouches = Array.from(event.touches).map(t => ({ clientX: t.clientX, clientY: t.clientY }));
-        const deltaX = ((newTouches[0].clientX - prevTouches[0].clientX) + (newTouches[1].clientX - prevTouches[1].clientX)) / 2;
-        const deltaY = ((newTouches[0].clientY - prevTouches[0].clientY) + (newTouches[1].clientY - prevTouches[1].clientY)) / 2;
-        prevTouches = newTouches;
-        
-        const panOffset = new THREE.Vector3();
-        
-        // Calculamos el vector "right" de la cámara:
-        const right = new THREE.Vector3();
-        right.crossVectors(corridorCamera.up, corridorCamera.getWorldDirection(new THREE.Vector3())).normalize();
-        
-        // Calculamos el vector "forward" (la dirección en la que mira la cámara)
-        const forward = new THREE.Vector3();
-        corridorCamera.getWorldDirection(forward).normalize();
-        
-        const factor = 0.01; // Ajusta este factor para modificar la sensibilidad
-        panOffset.addScaledVector(right, -deltaX * factor);
-        panOffset.addScaledVector(forward, -deltaY * factor);
-        
-        // Actualizamos solo la posición de la cámara
-        corridorCamera.position.add(panOffset);
-        
-        // Forzamos el target a permanecer fijo
-        controls.target.copy(fixedTarget);
-        controls.update();
-      } else {
-        prevTouches = null;
-      }
-    }, { passive: false });
-    
-    // Ocultamos el overlay para que la escena se muestre de inmediato
+    });
+    joystick.on('end', () => {
+      joystickData.x = 0;
+      joystickData.y = 0;
+    });
+    // Guardamos joystickData en una variable global para usar en el animate loop
+    window.mobileJoystickData = joystickData;
+  
+    // Desactivamos cualquier otro control táctil
+    // Ocultamos el overlay (blocker)
     let blocker = document.getElementById('blocker');
     if (blocker) {
       blocker.style.display = 'none';
     }
+    
+    // (No usamos OrbitControls en móviles con joystick)
+  } else {
+    // En escritorio, usamos PointerLockControls
+    controls = new PointerLockControls(corridorCamera, corridorRenderer.domElement);
+    blocker = document.getElementById('blocker');
+    instructions = document.getElementById('instructions');
+    controls.addEventListener('lock', () => {
+      blocker.style.display = 'none';
+    });
+    controls.addEventListener('unlock', () => {
+      blocker.style.display = 'flex';
+    });
+    blocker.addEventListener('click', () => controls.lock());
+    corridorScene.add(controls.getObject()); 
   
   } else {
     // En escritorio, usamos PointerLockControls
@@ -172,9 +154,26 @@ export function animateCorridor() {
   requestAnimationFrame(animateCorridor);
 
   if (isMobile()) {
-    // En cada frame, forzamos el target fijo
-    controls.target.copy(fixedTarget);
-    controls.update();
+    // Usamos los datos del joystick para mover la cámara.
+    // Por ejemplo, mapeamos el valor x del joystick a movimiento lateral,
+    // y el valor y a movimiento forward/backward (invirtiendo y para que un toque hacia arriba avance).
+    const factor = 0.05; // Factor de sensibilidad (ajusta según prefieras)
+    let dx = window.mobileJoystickData ? window.mobileJoystickData.x : 0;
+    let dy = window.mobileJoystickData ? window.mobileJoystickData.y : 0;
+    
+    // Calculamos el vector de movimiento usando los vectores "right" y "forward" de la cámara.
+    const right = new THREE.Vector3();
+    right.crossVectors(corridorCamera.up, corridorCamera.getWorldDirection(new THREE.Vector3())).normalize();
+    const forward = new THREE.Vector3();
+    corridorCamera.getWorldDirection(forward).normalize();
+    
+    const moveOffset = new THREE.Vector3();
+    moveOffset.addScaledVector(right, dx * factor);
+    moveOffset.addScaledVector(forward, -dy * factor);
+    
+    corridorCamera.position.add(moveOffset);
+    // Puedes actualizar el target de OrbitControls si lo estás usando, pero aquí no lo usamos.
+    clampCameraToRing();
   }
   
   // Solo en escritorio con PointerLockControls usamos el movimiento por teclado
