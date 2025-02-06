@@ -49,7 +49,7 @@ export function initCorridor() {
   // Cargar el modelo (Duck) – como tus archivos JS están en "js/", usa '../Duck.glb'
   const loader = new GLTFLoader();
   loader.load(
-    '../Duck.glb',
+    'https://alerobledo.github.io/demo3d/Duck.glb',
     (gltf) => {
       model = gltf.scene;
       model.position.set(0, 1, -10);
