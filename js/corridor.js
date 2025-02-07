@@ -183,14 +183,13 @@ export function animateCorridor() {
 
   if (isMobile()) {
     const moveFactor = 0.025;
-    const rotateFactor = 0.005; // Adjust this value to control rotation speed
 
     let dx = window.mobileJoystickData ? window.mobileJoystickData.x : 0;
     let dy = window.mobileJoystickData ? window.mobileJoystickData.y : 0;
     const right = new THREE.Vector3();
     right.crossVectors(corridorCamera.up, corridorCamera.getWorldDirection(new THREE.Vector3())).normalize();
     const forward = new THREE.Vector3();
-    corridorCamera.getWorldDirection(forward).normalize();
+    forward.set(0, 0, -1).applyQuaternion(corridorCamera.quaternion).normalize();
     const moveOffset = new THREE.Vector3();
     moveOffset.addScaledVector(right, dx * moveFactor);
     moveOffset.addScaledVector(forward, -dy * moveFactor);
@@ -200,9 +199,17 @@ export function animateCorridor() {
     // Rotate camera using normalized rotation joystick data
     let rotationX = window.mobileRotationData ? window.mobileRotationData.x : 0;
     let rotationY = window.mobileRotationData ? window.mobileRotationData.y : 0;
-    corridorCamera.rotation.y -= rotationX * rotateFactor;
-    corridorCamera.rotation.x -= rotationY * rotateFactor;
-    corridorCamera.rotation.x = THREE.MathUtils.clamp(corridorCamera.rotation.x, -Math.PI / 2, Math.PI / 2);
+
+    if (rotationX !== 0 || rotationY !== 0) {
+      if (Math.abs(rotationX) > Math.abs(rotationY)) {
+        // Rotate left or right
+        corridorCamera.rotation.y -= rotationX * 0.005;
+      } else {
+        // Rotate up or down
+        corridorCamera.rotation.x -= rotationY * 0.005;
+        corridorCamera.rotation.x = THREE.MathUtils.clamp(corridorCamera.rotation.x, -Math.PI / 2, Math.PI / 2);
+      }
+    }
  }
   
   // Solo en escritorio con PointerLockControls usamos el movimiento por teclado
