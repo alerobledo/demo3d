@@ -203,11 +203,18 @@ export function animateCorridor() {
     if (rotationX !== 0 || rotationY !== 0) {
       if (Math.abs(rotationX) > Math.abs(rotationY)) {
         // Rotate left or right
-        corridorCamera.rotation.y -= rotationX * 0.005;
+        if (rotationX > 0) {
+          corridorCamera.rotation.y = -Math.PI / 2; // Left
+        } else {
+          corridorCamera.rotation.y = Math.PI / 2; // Right
+        }
       } else {
         // Rotate up or down
-        corridorCamera.rotation.x -= rotationY * 0.005;
-        corridorCamera.rotation.x = THREE.MathUtils.clamp(corridorCamera.rotation.x, -Math.PI / 2, Math.PI / 2);
+        if (rotationY > 0) {
+          corridorCamera.rotation.x = -Math.PI / 2; // Up
+        } else {
+          corridorCamera.rotation.x = Math.PI / 2; // Down
+        }
       }
     }
  }
