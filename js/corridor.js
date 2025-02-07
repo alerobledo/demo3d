@@ -182,7 +182,9 @@ export function animateCorridor() {
   requestAnimationFrame(animateCorridor);
 
   if (isMobile()) {
-    const factor = 0.025;
+    const moveFactor = 0.025;
+    const rotateFactor = 0.005; // Adjust this value to control rotation speed
+
     let dx = window.mobileJoystickData ? window.mobileJoystickData.x : 0;
     let dy = window.mobileJoystickData ? window.mobileJoystickData.y : 0;
     const right = new THREE.Vector3();
@@ -190,18 +192,18 @@ export function animateCorridor() {
     const forward = new THREE.Vector3();
     corridorCamera.getWorldDirection(forward).normalize();
     const moveOffset = new THREE.Vector3();
-    moveOffset.addScaledVector(right, dx * factor);
-    moveOffset.addScaledVector(forward, -dy * factor);
+    moveOffset.addScaledVector(right, dx * moveFactor);
+    moveOffset.addScaledVector(forward, -dy * moveFactor);
     corridorCamera.position.add(moveOffset);
     clampCameraToRing();
 
-    // Rotate camera using restricted rotation joystick data
+    // Rotate camera using normalized rotation joystick data
     let rotationX = window.mobileRotationData ? window.mobileRotationData.x : 0;
     let rotationY = window.mobileRotationData ? window.mobileRotationData.y : 0;
-    corridorCamera.rotation.y -= rotationX * factor;
-    corridorCamera.rotation.x -= rotationY * factor;
+    corridorCamera.rotation.y -= rotationX * rotateFactor;
+    corridorCamera.rotation.x -= rotationY * rotateFactor;
     corridorCamera.rotation.x = THREE.MathUtils.clamp(corridorCamera.rotation.x, -Math.PI / 2, Math.PI / 2);
-  }
+ }
   
   // Solo en escritorio con PointerLockControls usamos el movimiento por teclado
   if (!isMobile() && controls.isLocked) {
