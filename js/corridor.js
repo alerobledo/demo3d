@@ -198,24 +198,10 @@ export function animateCorridor() {
 
     // Rotate camera using normalized rotation joystick data
     let rotationX = window.mobileRotationData ? window.mobileRotationData.x : 0;
-    let rotationY = window.mobileRotationData ? window.mobileRotationData.y : 0;
 
-    if (rotationX !== 0 || rotationY !== 0) {
-      if (Math.abs(rotationX) > Math.abs(rotationY)) {
-        // Rotate left or right
-        if (rotationX > 0) {
-          corridorCamera.rotation.y = -Math.PI / 2; // Left
-        } else {
-          corridorCamera.rotation.y = Math.PI / 2; // Right
-        }
-      } else {
-        // Rotate up or down
-        if (rotationY > 0) {
-          corridorCamera.rotation.x = -Math.PI / 2; // Up
-        } else {
-          corridorCamera.rotation.x = Math.PI / 2; // Down
-        }
-      }
+    if (rotationX !== 0) {
+      // Rotate left or right
+      corridorCamera.rotation.y -= rotationX * 0.005;
     }
  }
   
