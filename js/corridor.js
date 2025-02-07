@@ -265,35 +265,6 @@ function createCorridor() {
   rightWall.rotation.y = -Math.PI / 2;
   rightWall.position.set(corridorSize / 2, corridorHeight / 2, 0);
   corridorScene.add(rightWall);
-
-  // Paredes interiores (del hueco)
-  const innerWallMat = new THREE.MeshStandardMaterial({ color: 0xd3d3d3, side: THREE.DoubleSide });
-  const innerBoundary = innerSize / 2; // 6 si innerSize es 12
-
-  // Frontal interior
-  const innerWallGeoH = new THREE.PlaneGeometry(innerSize, corridorHeight);
-  const innerFrontWall = new THREE.Mesh(innerWallGeoH, innerWallMat);
-  innerFrontWall.position.set(0, corridorHeight / 2, -innerBoundary);
-  corridorScene.add(innerFrontWall);
-
-  // Trasera interior
-  const innerBackWall = new THREE.Mesh(innerWallGeoH, innerWallMat);
-  innerBackWall.rotation.y = Math.PI;
-  innerBackWall.position.set(0, corridorHeight / 2, innerBoundary);
-  corridorScene.add(innerBackWall);
-
-  // Izquierda interior
-  const innerWallGeoV = new THREE.PlaneGeometry(innerSize, corridorHeight);
-  const innerLeftWall = new THREE.Mesh(innerWallGeoV, innerWallMat);
-  innerLeftWall.rotation.y = Math.PI / 2;
-  innerLeftWall.position.set(-innerBoundary, corridorHeight / 2, 0);
-  corridorScene.add(innerLeftWall);
-
-  // Derecha interior
-  const innerRightWall = new THREE.Mesh(innerWallGeoV, innerWallMat);
-  innerRightWall.rotation.y = -Math.PI / 2;
-  innerRightWall.position.set(innerBoundary, corridorHeight / 2, 0);
-  corridorScene.add(innerRightWall);
 }
 
 /**
