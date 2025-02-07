@@ -78,7 +78,7 @@ export function initCorridor() {
     const joystick = nipplejs.create({
       zone: joystickZone,
       mode: 'static',
-      position: { left: '50%', bottom: '50%' },
+      position: { left: '80%', bottom: '20%' },
       color: 'white'
     });
     
@@ -105,7 +105,7 @@ export function initCorridor() {
     const rotationJoystick = nipplejs.create({
         zone: rotationZone,
         mode: 'static',
-        position: { right: '50%', bottom: '50%' },
+        position: { right: '20%', bottom: '20%' },
         color: 'white'
     });
     let rotationData = { x: 0, y: 0 };
