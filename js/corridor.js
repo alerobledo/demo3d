@@ -273,20 +273,10 @@ function createCorridor() {
  */
 function clampCameraToRing() {
   const outer = corridorSize / 2 - 0.2;  // Límite exterior (10 - 0.2 = 9.8)
-  const inner = innerSize / 2 + 0.2;       // Límite interior (6 + 0.2 = 6.2)
-
+ 
   // Primero, clampa la posición para que no se salga del cuadrado exterior:
   corridorCamera.position.x = THREE.MathUtils.clamp(corridorCamera.position.x, -outer, outer);
   corridorCamera.position.z = THREE.MathUtils.clamp(corridorCamera.position.z, -outer, outer);
-
-  // Si la cámara cae dentro del cuadrado interior, la empujamos hacia la frontera más cercana:
-  if (Math.abs(corridorCamera.position.x) < inner && Math.abs(corridorCamera.position.z) < inner) {
-    if (Math.abs(corridorCamera.position.x) < Math.abs(corridorCamera.position.z)) {
-      corridorCamera.position.x = corridorCamera.position.x < 0 ? -inner : inner;
-    } else {
-      corridorCamera.position.z = corridorCamera.position.z < 0 ? -inner : inner;
-    }
-  }
 }
 
 function onKeyDown(e) {
