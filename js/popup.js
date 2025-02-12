@@ -95,6 +95,7 @@ export function showPopup() {
  * Oculta el popup y limpia su escena
  */
 export function hidePopup() {
+  console.log('hidePopup called');
   popupModal.style.display = 'none';
   popupScene.clear();
 }
