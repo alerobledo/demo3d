@@ -149,6 +149,12 @@ export function initCorridor() {
     // (No usamos OrbitControls en móviles con joystick)
   
   } else {
+      // Ocultamos el overlay (blocker) también para desktop
+    let blocker = document.getElementById('blocker');
+    if (blocker) {
+      blocker.style.display = 'none';
+    }
+    
     // En escritorio, usamos PointerLockControls
     controls = new PointerLockControls(corridorCamera, corridorRenderer.domElement);
     blocker = document.getElementById('blocker');
