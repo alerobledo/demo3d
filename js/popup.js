@@ -58,6 +58,11 @@ export function initPopup() {
 export function showPopup() {
   popupModal.style.display = 'flex';
 
+  // Prevent event propagation when clicking inside the popup
+  popupModal.addEventListener('click', (event) => {
+    event.stopPropagation();
+  });
+  
   // Ajustar tamaño del renderer al canvas
   const pw = popupCanvas.clientWidth;
   const ph = popupCanvas.clientHeight;
