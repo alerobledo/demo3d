@@ -153,6 +153,19 @@ export function initCorridor() {
     // En escritorio, usamos PointerLockControls
     controls = new PointerLockControls(corridorCamera, corridorRenderer.domElement);
     
+    // Request pointer lock on canvas click
+    corridorCanvas.addEventListener('click', () => {
+      controls.lock();
+    });
+
+    controls.addEventListener('lock', () => {
+      console.log('Pointer locked');
+    });
+
+    controls.addEventListener('unlock', () => {
+      console.log('Pointer unlocked');
+    });
+
     // Solo para PointerLockControls, usamos getObject() y lo añadimos a la escena:
     corridorScene.add(controls.getObject());
   }
@@ -166,7 +179,6 @@ export function initCorridor() {
   corridorRaycaster = new THREE.Raycaster();
   document.addEventListener('click', onCorridorClick);
   document.addEventListener('touchend', onCorridorClick);
-
 
   window.addEventListener('resize', onWindowResize);
 }
@@ -199,7 +211,7 @@ export function animateCorridor() {
  }
   
   // Solo en escritorio con PointerLockControls usamos el movimiento por teclado
-  if (!isMobile()) {
+  if (!isMobile() && controls.isLocked) {
     let step = 0.1;
     let mx = 0, mz = 0;
     if (moveForward) mz -= step;
