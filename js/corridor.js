@@ -148,24 +148,11 @@ export function initCorridor() {
     
     // (No usamos OrbitControls en móviles con joystick)
   
-  } else {
-      // Ocultamos el overlay (blocker) también para desktop
-    // let blocker = document.getElementById('blocker');
-    // if (blocker) {
-    //   blocker.style.display = 'none';
-    // }
+  } else { // desktop
     
     // En escritorio, usamos PointerLockControls
     controls = new PointerLockControls(corridorCamera, corridorRenderer.domElement);
-    // blocker = document.getElementById('blocker');
-    instructions = document.getElementById('instructions');
-    controls.addEventListener('lock', () => {
-      // blocker.style.display = 'none';
-    });
-    controls.addEventListener('unlock', () => {
-      // blocker.style.display = 'flex';
-    });
-    // blocker.addEventListener('click', () => controls.lock());
+    
     // Solo para PointerLockControls, usamos getObject() y lo añadimos a la escena:
     corridorScene.add(controls.getObject());
   }
@@ -212,7 +199,7 @@ export function animateCorridor() {
  }
   
   // Solo en escritorio con PointerLockControls usamos el movimiento por teclado
-  if (!isMobile() && controls.isLocked) {
+  if (!isMobile()) {
     let step = 0.1;
     let mx = 0, mz = 0;
     if (moveForward) mz -= step;
