@@ -23,7 +23,7 @@ let moveForward = false, moveBackward = false, moveLeft = false, moveRight = fal
 let model = null; // Aquí se cargará el modelo (Duck)
 let corridorRaycaster;
 
-let corridorCanvas, blocker, instructions;
+let corridorCanvas, instructions;
 
 export function initCorridor() {
   corridorCanvas = document.getElementById('corridorCanvas');
@@ -141,31 +141,31 @@ export function initCorridor() {
     
     // Desactivamos cualquier otro control táctil
     // Ocultamos el overlay (blocker)
-    let blocker = document.getElementById('blocker');
-    if (blocker) {
-      blocker.style.display = 'none';
-    }
+    // let blocker = document.getElementById('blocker');
+    // if (blocker) {
+    //   blocker.style.display = 'none';
+    // }
     
     // (No usamos OrbitControls en móviles con joystick)
   
   } else {
       // Ocultamos el overlay (blocker) también para desktop
-    let blocker = document.getElementById('blocker');
-    if (blocker) {
-      blocker.style.display = 'none';
-    }
+    // let blocker = document.getElementById('blocker');
+    // if (blocker) {
+    //   blocker.style.display = 'none';
+    // }
     
     // En escritorio, usamos PointerLockControls
     controls = new PointerLockControls(corridorCamera, corridorRenderer.domElement);
-    blocker = document.getElementById('blocker');
+    // blocker = document.getElementById('blocker');
     instructions = document.getElementById('instructions');
     controls.addEventListener('lock', () => {
-      blocker.style.display = 'none';
+      // blocker.style.display = 'none';
     });
     controls.addEventListener('unlock', () => {
-      blocker.style.display = 'flex';
+      // blocker.style.display = 'flex';
     });
-    blocker.addEventListener('click', () => controls.lock());
+    // blocker.addEventListener('click', () => controls.lock());
     // Solo para PointerLockControls, usamos getObject() y lo añadimos a la escena:
     corridorScene.add(controls.getObject());
   }
@@ -322,11 +322,10 @@ function onCorridorClick(e) {
     for (let i = 0; i < intersects.length; i++) {
       const obj = intersects[i].object;
       if (isDescendantOf(obj, model)) {
-        console.log('Duck clickeado → abrir popup');
+        console.log('Duck clickeado');
         if (!isMobile()) {
           controls.unlock();
         }
-        showPopup();
         break;
       }
     }
