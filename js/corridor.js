@@ -325,6 +325,7 @@ function onCorridorClick(e) {
         if (!isMobile()) {
           controls.unlock();
         }
+        showPopup();
         break;
       }
     }
