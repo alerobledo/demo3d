@@ -56,7 +56,9 @@ export function initPopup() {
  * y arranca el bucle de animación del popup.
  */
 export function showPopup() {
+  console.log('showPopup called');
   popupModal.style.display = 'flex';
+  console.log('Popup display set to flex'); // Add this log
 
   // Prevent event propagation when clicking inside the popup
   popupModal.addEventListener('click', (event) => {
