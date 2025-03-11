@@ -181,8 +181,9 @@ export function initCorridor() {
 
   corridorRaycaster = new THREE.Raycaster();
   document.addEventListener('click', onCorridorClick);
-  document.addEventListener('touchend', onCorridorClick);  // Ensure touchend event listener is added
-
+  //document.addEventListener('touchend', onCorridorClick);  // Ensure touchend event listener is added
+  corridorCanvas.addEventListener('touchend', onCorridorClick, { passive: false });
+  
   window.addEventListener('resize', onWindowResize);
 }
 
