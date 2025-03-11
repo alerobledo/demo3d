@@ -11,6 +11,8 @@ let btnClose, btnBuy;
 
 let modelInPopup = null;
 
+import { controls } from './corridor.js';
+
 /**
  * Inicializa los elementos del popup (canvas, renderer, cámara, botones, etc.)
  * Se llamará una sola vez (por ejemplo, desde el index.html).
@@ -105,6 +107,13 @@ export function hidePopup() {
   console.log('hidePopup called');
   popupModal.style.display = 'none';
   popupScene.clear();
+
+  // Request pointer lock again after hiding the popup
+  const corridorCanvas = document.getElementById('corridorCanvas');
+  corridorCanvas.addEventListener('click', () => {
+    controls.lock();
+  });
+  controls.lock();
 }
 
 /**
