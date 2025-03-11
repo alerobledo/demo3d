@@ -73,10 +73,13 @@ export function initCorridor() {
   if (isMobile()) {
     // En móviles, en lugar de usar OrbitControls para todo, usaremos un joystick virtual
     // Crearemos el joystick en el contenedor con id "joystickZone"
-    const joystickZone = document.getElementById('joystickZone');
+    //const joystickZone = document.getElementById('joystickZone');
     // Crea el joystick usando nipplejs en modo "static"
+    const joystickArrowZone = document.createElement('div');
+    joystickArrowZone.id = 'joystickArrowZone';
+    document.body.appendChild(joystickArrowZone);
     const joystick = nipplejs.create({
-      zone: joystickZone,
+      zone: joystickArrowZone,
       mode: 'static',
       position: { left: '5%', bottom: '5%' },
       color: 'white'
