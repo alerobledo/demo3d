@@ -184,6 +184,7 @@ export function initCorridor() {
   //document.addEventListener('touchend', onCorridorClick);  // Ensure touchend event listener is added
   corridorCanvas.addEventListener('touchend', onCorridorClick, { passive: false });
   corridorCanvas.addEventListener('pointerup', onCorridorClick);
+  corridorCanvas.addEventListener('click', onCorridorClick);
   
   window.addEventListener('resize', onWindowResize);
 }
