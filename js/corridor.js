@@ -18,7 +18,7 @@ const innerSize = 12;      // Cuadrado interior (de -6 a 6)
 const corridorHeight = 3;  // Altura del corredor
 
 let corridorRenderer, corridorScene, corridorCamera;
-let controls;
+export let controls;
 let moveForward = false, moveBackward = false, moveLeft = false, moveRight = false;
 let model = null; // Aquí se cargará el modelo (Duck)
 let corridorRaycaster;
