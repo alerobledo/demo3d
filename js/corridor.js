@@ -319,22 +319,29 @@ function onKeyUp(e) {
 }
 
 function onCorridorClick(e) {
-  console.log('onCorridorClick called');  // Add this log for debugging
-  if (!controls) return;
-
-  // Prevent default behavior for touch events
-  e.preventDefault();
-
-  // Usamos el centro de la pantalla (0,0) para detectar clic en el modelo.
-  corridorRaycaster.setFromCamera(new THREE.Vector2(0, 0), corridorCamera);
-  const intersects = corridorRaycaster.intersectObjects(corridorScene.children, true);
+  console.log('onCorridorClick called');
+  let ndc;
+  if (e.changedTouches && e.changedTouches.length > 0) {
+    // Extraer la posición del primer toque
+    const touch = e.changedTouches[0];
+    const rect = corridorCanvas.getBoundingClientRect();
+    // Convertir a coordenadas normalizadas (NDC)
+    const x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
+    ndc = new THREE.Vector2(x, y);
+  } else {
+    ndc = new THREE.Vector2(0, 0); // Para mouse, usar el centro
+  }
   
+  corridorRaycaster.setFromCamera(ndc, corridorCamera);
+  const intersects = corridorRaycaster.intersectObjects(corridorScene.children, true);
+  console.log('Intersects count:', intersects.length);
   if (intersects.length > 0 && model) {
     for (let i = 0; i < intersects.length; i++) {
       const obj = intersects[i].object;
       if (isDescendantOf(obj, model)) {
-        console.log('Duck clickeado');
-        showPopup();  // Call showPopup for both desktop and mobile
+        console.log('Duck clicked, opening popup');
+        showPopup();
         if (controls && !isMobile()) {
           controls.unlock();
         }
@@ -343,6 +350,7 @@ function onCorridorClick(e) {
     }
   }
 }
+
 
 function onWindowResize() {
   corridorRenderer.setSize(window.innerWidth, window.innerHeight);
