@@ -98,7 +98,7 @@ export function initCorridor() {
     // Guardamos joystickData en una variable global para usar en el animate loop
     window.mobileJoystickData = joystickData;
 
-     // Create a second joystick for rotation
+    // Create a second joystick for rotation
     const rotationZone = document.createElement('div');
     rotationZone.id = 'rotationZone';
     document.body.appendChild(rotationZone);
@@ -178,7 +178,7 @@ export function initCorridor() {
 
   corridorRaycaster = new THREE.Raycaster();
   document.addEventListener('click', onCorridorClick);
-  document.addEventListener('touchend', onCorridorClick);
+  document.addEventListener('touchend', onCorridorClick);  // Ensure touchend event listener is added
 
   window.addEventListener('resize', onWindowResize);
 }
@@ -313,19 +313,25 @@ function onKeyUp(e) {
 }
 
 function onCorridorClick(e) {
+  console.log('onCorridorClick called');  // Add this log for debugging
   if (!controls) return;
+
+  // Prevent default behavior for touch events
+  e.preventDefault();
+
   // Usamos el centro de la pantalla (0,0) para detectar clic en el modelo.
   corridorRaycaster.setFromCamera(new THREE.Vector2(0, 0), corridorCamera);
   const intersects = corridorRaycaster.intersectObjects(corridorScene.children, true);
+  
   if (intersects.length > 0 && model) {
     for (let i = 0; i < intersects.length; i++) {
       const obj = intersects[i].object;
       if (isDescendantOf(obj, model)) {
         console.log('Duck clickeado');
-        if (!isMobile()) {
+        showPopup();  // Call showPopup for both desktop and mobile
+        if (controls && !isMobile()) {
           controls.unlock();
         }
-        showPopup();
         break;
       }
     }
