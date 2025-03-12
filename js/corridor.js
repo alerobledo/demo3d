@@ -69,7 +69,7 @@ export function initCorridor() {
         model.name = url;
         model.urllll = url;
         model.userData.url = url; // Store the URL in userData
-        console.log('URL:', url, '  - Assigned URL:', model.userData.url, '  - uuid: ', uuid); // Verify assignment
+        console.log('URL:', url, '  - Assigned URL:', model.userData.url, '  - uuid: ', model.uuid); // Verify assignment
         model.position.set(4 + index * 2, 1, 0);
         model.scale.set(0.3, 0.3, 0.3);
         modelsIds.add(model.uuid);
