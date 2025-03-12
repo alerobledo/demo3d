@@ -24,6 +24,10 @@ let model = null; // Aquí se cargará el modelo (Duck)
 let corridorRaycaster;
 
 let corridorCanvas, instructions;
+const modelUrls = [
+    'https://alerobledo.github.io/demo3d/Duck.glb',
+    'https://alerobledo.github.io/demo3d/Duck2.glb'
+];
 
 export function initCorridor() {
   corridorCanvas = document.getElementById('corridorCanvas');
@@ -54,10 +58,6 @@ export function initCorridor() {
   createCorridor();
 
   // Cargar los modelos
-  const modelUrls = [
-    'https://alerobledo.github.io/demo3d/Duck.glb',
-    'https://alerobledo.github.io/demo3d/Duck2.glb'
-  ];
   const loader = new GLTFLoader();
   modelUrls.forEach((url, index) => {
     loader.load(
