@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { PointerLockControls } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/controls/PointerLockControls.js';
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/controls/OrbitControls.js';
-import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/loaders/GLTFLoader.js';
+import { loadModel } from './models_loader.js';
 
 // Importamos la función showPopup desde popup.js
 import { showPopup } from './popup.js';
@@ -53,21 +53,8 @@ export function initCorridor() {
   // Crear el corredor (pasillo) en forma de anillo
   createCorridor();
 
-  // Cargar el modelo (Duck) usando la URL proporcionada.
-  const loader = new GLTFLoader();
-  loader.load(
-    'https://alerobledo.github.io/demo3d/Duck.glb',
-    (gltf) => {
-      model = gltf.scene;
-      // Colocar el modelo en la pared exterior, por ejemplo, en x=9 (cerca del límite exterior)
-      model.position.set(9, 1, 0);
-      // Reducir la escala para que se vea como un producto pequeño
-      model.scale.set(0.3, 0.3, 0.3);
-      corridorScene.add(model);
-    },
-    undefined,
-    (err) => console.error(err)
-  );
+  // Cargar los modelos
+  loadModel(corridorScene, model);
 
   // Configurar controles según el dispositivo
   if (isMobile()) {
