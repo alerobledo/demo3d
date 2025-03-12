@@ -54,34 +54,25 @@ export function initCorridor() {
   createCorridor();
 
   // Cargar los modelos
-const loader = new GLTFLoader();
-  loader.load(
+  const modelUrls = [
     'https://alerobledo.github.io/demo3d/Duck.glb',
-    (gltf) => {
-      model = gltf.scene;
-      // Colocar el modelo en la pared exterior, por ejemplo, en x=9 (cerca del límite exterior)
-      model.position.set(9, 1, 0);
-      // Reducir la escala para que se vea como un producto pequeño
-      model.scale.set(0.3, 0.3, 0.3);
-      corridorScene.add(model);
-    },
-    undefined,
-    (err) => console.error(err)
-  );
-
-  loader.load(
-    'https://alerobledo.github.io/demo3d/Duck.glb',
-    (gltf) => {
-      model = gltf.scene;
-      // Colocar el modelo en la pared exterior, por ejemplo, en x=9 (cerca del límite exterior)
-      model.position.set(10, 2, 3);
-      // Reducir la escala para que se vea como un producto pequeño
-      model.scale.set(0.3, 0.3, 0.3);
-      corridorScene.add(model);
-    },
-    undefined,
-    (err) => console.error(err)
-  );
+    'https://alerobledo.github.io/demo3d/Duck2.glb'
+  ];
+  const loader = new GLTFLoader();
+  modelUrls.forEach((url, index) => {
+    loader.load(
+      url,
+      (gltf) => {
+        const model = gltf.scene;
+        model.userData.url = url; // Store the URL in userData
+        model.position.set(4 + index * 2, 1, 0);
+        model.scale.set(0.3, 0.3, 0.3);
+        corridorScene.add(model);
+      },
+      undefined,
+      (err) => console.error(err)
+    );
+  });
   
   // Configurar controles según el dispositivo
   if (isMobile()) {
@@ -350,11 +341,11 @@ function onCorridorClick(e) {
   corridorRaycaster.setFromCamera(ndc, corridorCamera);
   const intersects = corridorRaycaster.intersectObjects(corridorScene.children, true);
   console.log('Intersects count:', intersects.length);
-  if (intersects.length > 0 && model) {
+ if (intersects.length > 0) {
     for (let i = 0; i < intersects.length; i++) {
       const obj = intersects[i].object;
-      if (isDescendantOf(obj, model)) {
-        console.log('Duck clicked, opening popup');
+      if (modelUrls.includes(obj.userData.url)) { // Check if the object is one of the models
+        console.log('Model clicked, opening popup');
         showPopup();
         if (controls && !isMobile()) {
           controls.unlock();
