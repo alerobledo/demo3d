@@ -65,6 +65,7 @@ export function initCorridor() {
       (gltf) => {
         const model = gltf.scene;
         model.userData.url = url; // Store the URL in userData
+        console.log('URL:', url, '  - Assigned URL:', model.userData.url); // Verify assignment
         model.position.set(4 + index * 2, 1, 0);
         model.scale.set(0.3, 0.3, 0.3);
         corridorScene.add(model);
