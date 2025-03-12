@@ -63,7 +63,7 @@ export function initCorridor() {
     loader.load(
       url,
       (gltf) => {
-        const model = gltf.scene;
+        model = gltf.scene;
         model.name = url;
         model.urllll = url;
         model.userData.url = url; // Store the URL in userData
