@@ -64,6 +64,7 @@ export function initCorridor() {
       url,
       (gltf) => {
         const model = gltf.scene;
+        model.name = url;
         model.urllll = url;
         model.userData.url = url; // Store the URL in userData
         console.log('URL:', url, '  - Assigned URL:', model.userData.url); // Verify assignment
