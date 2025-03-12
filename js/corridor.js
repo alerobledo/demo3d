@@ -90,8 +90,8 @@ const loader = new GLTFLoader();
     // Al mover el joystick, actualizamos joystickData
     joystick.on('move', (evt, data) => {
       if (data && data.vector) {
-        joystickData.x = data.vector.x; // Valores entre -1 y 1
-        joystickData.y = data.vector.y; // Valores entre -1 y 1
+        joystickData.x = -data.vector.x; // Valores entre -1 y 1
+        joystickData.y = -data.vector.y; // Valores entre -1 y 1
       }
     });
     joystick.on('end', () => {
