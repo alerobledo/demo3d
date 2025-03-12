@@ -341,9 +341,11 @@ function onCorridorClick(e) {
   corridorRaycaster.setFromCamera(ndc, corridorCamera);
   const intersects = corridorRaycaster.intersectObjects(corridorScene.children, true);
   console.log('Intersects count:', intersects.length);
+  console.log('modelUrls:',modelUrls);
  if (intersects.length > 0) {
     for (let i = 0; i < intersects.length; i++) {
       const obj = intersects[i].object;
+      console.log('obj:',obj);
       if (modelUrls.includes(obj.userData.url)) { // Check if the object is one of the models
         console.log('Model clicked, opening popup');
         showPopup();
