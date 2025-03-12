@@ -69,6 +69,20 @@ const loader = new GLTFLoader();
     (err) => console.error(err)
   );
 
+  loader.load(
+    'https://alerobledo.github.io/demo3d/Duck.glb',
+    (gltf) => {
+      model = gltf.scene;
+      // Colocar el modelo en la pared exterior, por ejemplo, en x=9 (cerca del límite exterior)
+      model.position.set(10, 2, 3);
+      // Reducir la escala para que se vea como un producto pequeño
+      model.scale.set(0.3, 0.3, 0.3);
+      corridorScene.add(model);
+    },
+    undefined,
+    (err) => console.error(err)
+  );
+  
   // Configurar controles según el dispositivo
   if (isMobile()) {
     // En móviles, en lugar de usar OrbitControls para todo, usaremos un joystick virtual
