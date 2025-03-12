@@ -72,7 +72,7 @@ export function initCorridor() {
         console.log('URL:', url, '  - Assigned URL:', model.userData.url, '  - uuid: ', model.uuid); // Verify assignment
         model.position.set(4 + index * 2, 1, 0);
         model.scale.set(0.3, 0.3, 0.3);
-        modelsIds.add(model.uuid);
+        modelsIds.push(model.uuid);
         corridorScene.add(model);
       },
       undefined,
