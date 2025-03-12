@@ -29,6 +29,8 @@ const modelUrls = [
     'https://alerobledo.github.io/demo3d/Duck2.glb'
 ];
 
+const modelsIds = [];
+
 export function initCorridor() {
   corridorCanvas = document.getElementById('corridorCanvas');
 
@@ -67,9 +69,10 @@ export function initCorridor() {
         model.name = url;
         model.urllll = url;
         model.userData.url = url; // Store the URL in userData
-        console.log('URL:', url, '  - Assigned URL:', model.userData.url); // Verify assignment
+        console.log('URL:', url, '  - Assigned URL:', model.userData.url, '  - uuid: ', uuid); // Verify assignment
         model.position.set(4 + index * 2, 1, 0);
         model.scale.set(0.3, 0.3, 0.3);
+        modelsIds.add(model.uuid);
         corridorScene.add(model);
       },
       undefined,
@@ -345,11 +348,14 @@ function onCorridorClick(e) {
   const intersects = corridorRaycaster.intersectObjects(corridorScene.children, true);
   console.log('Intersects count:', intersects.length);
   console.log('modelUrls:',modelUrls);
+  console.log('modelsIds:',modelsIds);
+      
  if (intersects.length > 0) {
     for (let i = 0; i < intersects.length; i++) {
       const obj = intersects[i].object;
-      console.log('obj:',obj);
-      if (modelUrls.includes(obj.userData.url)) { // Check if the object is one of the models
+      console.log('obj:',obj, '  - uuid: ', obj.uuid);
+      if (modelsIds.includes(obj.uuid)) { // Check if the object is one of the models
+      //if (modelUrls.includes(obj.userData.url)) { // Check if the object is one of the models
         console.log('Model clicked, opening popup');
         showPopup();
         if (controls && !isMobile()) {
