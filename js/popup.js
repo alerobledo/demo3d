@@ -48,7 +48,7 @@ export function initPopup() {
   // Botones
   btnClose.onclick = hidePopup;
   btnBuy.onclick = () => {
-    alert('¡Compraste el pato (demo)!');
+    alert('Producto agregado al carrito. Segúi disfrutando de la compra!!');
     hidePopup();
   };
 }
@@ -92,7 +92,7 @@ export function showPopup(modelUrl) {
      (gltf) => {
        modelInPopup = gltf.scene;
        // Ajustes de escala y posición para que se vea centrado
-      // modelInPopup.scale.set(0.5, 0.5, 0.5);
+       modelInPopup.scale.set(0.5, 0.5, 0.5);
        modelInPopup.position.set(0, -0.3, 0);
        popupScene.add(modelInPopup);
      },
