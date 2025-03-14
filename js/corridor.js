@@ -26,7 +26,9 @@ let corridorRaycaster;
 let corridorCanvas, instructions;
 const modelUrls = [
     'https://alerobledo.github.io/demo3d/Duck.glb',
-    'https://alerobledo.github.io/demo3d/Duck2.glb'
+    'https://alerobledo.github.io/demo3d/Duck2.glb',
+  'https://alerobledo.github.io/demo3d/Duck3.glb',
+    'https://alerobledo.github.io/demo3d/Duck4.glb'
 ];
 
 const modelsIds = [];
@@ -67,7 +69,7 @@ export function initCorridor() {
       (gltf) => {
         model = gltf.scene;
         console.log('Loaded model - uuid: ', model.uuid); 
-        const spacing = 2;
+        const spacing = 1;
         const zPos = -((modelUrls.length - 1) * spacing) / 2 + index * spacing;
         model.position.set(9, 1, zPos);
         model.scale.set(0.3, 0.3, 0.3);
