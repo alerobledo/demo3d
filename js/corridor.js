@@ -67,7 +67,9 @@ export function initCorridor() {
       (gltf) => {
         model = gltf.scene;
         console.log('Loaded model - uuid: ', model.uuid); 
-        model.position.set(4, 1 + index * 2, 0);
+        const spacing = 4;
+        const zPos = -((modelUrls.length - 1) * spacing) / 2 + index * spacing;
+        model.position.set(9, 1, zPos);
         model.scale.set(0.3, 0.3, 0.3);
         modelsIds.push(model.uuid);
         corridorScene.add(model);
