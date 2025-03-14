@@ -69,7 +69,6 @@ export function initCorridor() {
       url,
       (gltf) => {
         model = gltf.scene;
-        console.log('Loaded model - uuid: ', model.uuid); 
         const spacing = 1;
         const zPos = -((modelUrls.length - 1) * spacing) / 2 + index * spacing;
         model.position.set(9, 1, zPos);
@@ -77,6 +76,7 @@ export function initCorridor() {
         model.rotation.y = Math.PI; // Rotate the model 180 degrees to face the camera
         modelsIds.push(model.uuid); // for trigger the popup
         corridorScene.add(model);
+        console.log('Loaded model - url', url,'  - uuid: ', model.uuid,  ' - position: ', model.position); 
       },
       undefined,
       (err) => console.error(err)
