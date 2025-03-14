@@ -28,7 +28,7 @@ const modelUrls = [
     'https://alerobledo.github.io/demo3d/Duck.glb',
     'https://alerobledo.github.io/demo3d/Duck2.glb',
   'https://alerobledo.github.io/demo3d/Duck3.glb',
-    'https://alerobledo.github.io/demo3d/happy_face_emogi.glb'
+    'https://alerobledo.github.io/demo3d/happy_face_emogi_100.glb'
 ];
 
 const modelsIds = [];
