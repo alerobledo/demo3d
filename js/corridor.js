@@ -90,7 +90,7 @@ export function initCorridor() {
         const spacing = 1;
         //const zPos = -((modelUrls.length - 1) * spacing) / 2 + index * spacing;
         model.position.set(9, 1, 5);
-        //model.scale.set(0.3, 0.3, 0.3);
+        model.scale.set(5, 5, 5);
         //model.rotation.y = Math.PI; // Rotate the model 180 degrees to face the camera
         modelsIds.push(model.uuid); // for trigger the popup
         corridorScene.add(model);
