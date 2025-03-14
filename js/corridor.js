@@ -376,12 +376,14 @@ function onCorridorClick(e) {
       console.log('parent.parent: ', obj.parent.parent);
       console.log('parent.parent.uuid: ', obj.parent.parent.uuid);
       if (modelsIds.includes(obj.parent.parent.uuid)) { // Check if the object is one of the models
-        console.log('Model clicked, opening popup');
-        showPopup();
-        if (controls && !isMobile()) {
-          controls.unlock();
-        }
-        break;
+        const modelIndex = modelsIds.indexOf(obj.parent.parent.uuid);
+         const modelUrl = modelUrls[modelIndex];
+         console.log('Model clicked, opening popup with URL:', modelUrl);
+         showPopup(modelUrl);
+         if (controls && !isMobile()) {
+           controls.unlock();
+         }
+         break;
       }
     }
   }
