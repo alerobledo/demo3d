@@ -81,23 +81,6 @@ export function initCorridor() {
       (err) => console.error(err)
     );
   });
-
-  loader.load(
-      'https://alerobledo.github.io/demo3d/happy_face_emogi.glb',
-      (gltf) => {
-        model = gltf.scene;
-        console.log('Loaded model happy_face_emogi - uuid: ', model.uuid); 
-        const spacing = 1;
-        //const zPos = -((modelUrls.length - 1) * spacing) / 2 + index * spacing;
-        model.position.set(9, 1, 5);
-        model.scale.set(5, 5, 5);
-        //model.rotation.y = Math.PI; // Rotate the model 180 degrees to face the camera
-        modelsIds.push(model.uuid); // for trigger the popup
-        corridorScene.add(model);
-      },
-      undefined,
-      (err) => console.error(err)
-    );
   
   // Configurar controles según el dispositivo
   if (isMobile()) {
