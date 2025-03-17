@@ -27,8 +27,9 @@ let corridorCanvas, instructions;
 const modelUrls = [
     'https://alerobledo.github.io/demo3d/Duck.glb',
     'https://alerobledo.github.io/demo3d/Duck2.glb',
-  'https://alerobledo.github.io/demo3d/Duck3.glb',
-    'https://alerobledo.github.io/demo3d/Duck4.glb'
+    'https://alerobledo.github.io/demo3d/Duck3.glb',
+    'https://alerobledo.github.io/demo3d/happy_face_emogi_100.glb',
+    'https://alerobledo.github.io/demo3d/emogi_glasses_face_1.glb'
 ];
 
 const modelsIds = [];
@@ -68,7 +69,6 @@ export function initCorridor() {
       url,
       (gltf) => {
         model = gltf.scene;
-        console.log('Loaded model - uuid: ', model.uuid); 
         const spacing = 1;
         const zPos = -((modelUrls.length - 1) * spacing) / 2 + index * spacing;
         model.position.set(9, 1, zPos);
@@ -76,6 +76,7 @@ export function initCorridor() {
         model.rotation.y = Math.PI; // Rotate the model 180 degrees to face the camera
         modelsIds.push(model.uuid); // for trigger the popup
         corridorScene.add(model);
+        console.log('Loaded model - url', url,'  - uuid: ', model.uuid,  ' - position: ', model.position); 
       },
       undefined,
       (err) => console.error(err)
@@ -359,12 +360,14 @@ function onCorridorClick(e) {
       console.log('parent.parent: ', obj.parent.parent);
       console.log('parent.parent.uuid: ', obj.parent.parent.uuid);
       if (modelsIds.includes(obj.parent.parent.uuid)) { // Check if the object is one of the models
-        console.log('Model clicked, opening popup');
-        showPopup();
-        if (controls && !isMobile()) {
-          controls.unlock();
-        }
-        break;
+        const modelIndex = modelsIds.indexOf(obj.parent.parent.uuid);
+         const modelUrl = modelUrls[modelIndex];
+         console.log('Model clicked, opening popup with URL:', modelUrl);
+         showPopup(modelUrl);
+         if (controls && !isMobile()) {
+           controls.unlock();
+         }
+         break;
       }
     }
   }

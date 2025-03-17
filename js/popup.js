@@ -48,57 +48,62 @@ export function initPopup() {
   // Botones
   btnClose.onclick = hidePopup;
   btnBuy.onclick = () => {
-    alert('¡Compraste el pato (demo)!');
+    alert('Producto agregado al carrito. Segúi disfrutando de la compra!!');
     hidePopup();
   };
 }
 
+// ... existing imports and variables ...
+
 /**
  * Muestra el popup, carga de nuevo el modelo .glb (o podrías clonar el del pasillo),
  * y arranca el bucle de animación del popup.
+ * @param {string} modelUrl - La URL del modelo GLB a cargar.
  */
-export function showPopup() {
-  console.log('showPopup called');
-  popupModal.style.display = 'flex';
-  console.log('Popup display set to flex'); // Add this log
+export function showPopup(modelUrl) {
+   console.log('showPopup called with modelUrl:', modelUrl);
+   popupModal.style.display = 'flex';
+   console.log('Popup display set to flex');
 
-  // Prevent event propagation when clicking inside the popup
-  popupModal.addEventListener('click', (event) => {
-    event.stopPropagation();
-  });
-  
-  // Ajustar tamaño del renderer al canvas
-  const pw = popupCanvas.clientWidth;
-  const ph = popupCanvas.clientHeight;
-  popupRenderer.setSize(pw, ph);
+   // Prevent event propagation when clicking inside the popup
+   popupModal.addEventListener('click', (event) => {
+     event.stopPropagation();
+   });
+   
+   // Ajustar tamaño del renderer al canvas
+   const pw = popupCanvas.clientWidth;
+   const ph = popupCanvas.clientHeight;
+   popupRenderer.setSize(pw, ph);
 
-  // Limpiar la escena
-  popupScene.clear();
-  popupCamera.position.set(0, 0, 3);
-  popupControls.reset();
-  popupControls.update();
+   // Limpiar la escena
+   popupScene.clear();
+   popupCamera.position.set(0, 0, 3);
+   popupControls.reset();
+   popupControls.update();
 
-  // Luz en la escena (otra vez, por si la quitamos al limpiar)
-  const popLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
-  popupScene.add(popLight);
+   // Luz en la escena (otra vez, por si la quitamos al limpiar)
+   const popLight = new THREE.HemisphereLight(0xffffff, 0x444444, 1);
+   popupScene.add(popLight);
 
-  // Cargamos otra vez el .glb (aquí: Duck.glb)
-  const loader = new GLTFLoader();
-  loader.load(
-    'https://alerobledo.github.io/demo3d/Duck.glb',
-    (gltf) => {
-      modelInPopup = gltf.scene;
-      // Ajustes de escala y posición para que se vea centrado
-      modelInPopup.scale.set(0.5, 0.5, 0.5);
-      modelInPopup.position.set(0, -0.3, 0);
-      popupScene.add(modelInPopup);
-    },
-    undefined,
-    (err) => console.error(err)
-  );
+   // Cargamos otra vez el .glb usando la URL proporcionada
+   const loader = new GLTFLoader();
+   loader.load(
+     modelUrl,
+     (gltf) => {
+       modelInPopup = gltf.scene;
+       // Ajustes de escala y posición para que se vea centrado
+       modelInPopup.scale.set(0.5, 0.5, 0.5);
+       modelInPopup.position.set(0, -0.3, 0);
+       popupScene.add(modelInPopup);
+     },
+     undefined,
+     (err) => console.error(err)
+   );
 
-  animatePopup();
+   animatePopup();
 }
+
+// ... existing code ...
 
 /**
  * Oculta el popup y limpia su escena
