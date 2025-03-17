@@ -44,13 +44,18 @@
   <!-- Cargamos el módulo del pasillo -->
   <script type="module" src="./js/corridor.js"></script>
 
+  <!-- Cargamos el módulo del carrito -->
+  <script type="module" src="./js/cart.js"></script>
+
   <!-- Script principal para inicializar ambos módulos -->
   <script type="module">
     import { initCorridor, animateCorridor } from './js/corridor.js';
     import { initPopup } from './js/popup.js';
+    import { initCart } from './js/cart.js';
 
     initPopup();
     initCorridor();
+    initCart();
     animateCorridor();
   </script>
 

@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/loaders/GLTFLoader.js';
+import { addToCart } from './cart.js';
 
 // Variables del popup
 let popupRenderer, popupScene, popupCamera;
@@ -10,6 +11,7 @@ let popupModal, popupCanvas;
 let btnClose, btnBuy;
 
 let modelInPopup = null;
+let currentModelUrl = null;
 
 import { controls } from './corridor.js';
 
@@ -48,12 +50,13 @@ export function initPopup() {
   // Botones
   btnClose.onclick = hidePopup;
   btnBuy.onclick = () => {
-    alert('Producto agregado al carrito. Segúi disfrutando de la compra!!');
+    if (currentModelUrl) {
+      addToCart(currentModelUrl);
+      alert('Producto agregado al carrito. Segúi disfrutando de la compra!!');
+    }
     hidePopup();
   };
 }
-
-// ... existing imports and variables ...
 
 /**
  * Muestra el popup, carga de nuevo el modelo .glb (o podrías clonar el del pasillo),
@@ -62,6 +65,7 @@ export function initPopup() {
  */
 export function showPopup(modelUrl) {
    console.log('showPopup called with modelUrl:', modelUrl);
+   currentModelUrl = modelUrl; // Store the current model URL
    popupModal.style.display = 'flex';
    console.log('Popup display set to flex');
 
@@ -102,8 +106,6 @@ export function showPopup(modelUrl) {
 
    animatePopup();
 }
-
-// ... existing code ...
 
 /**
  * Oculta el popup y limpia su escena
