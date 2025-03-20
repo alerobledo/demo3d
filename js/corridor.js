@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { PointerLockControls } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/controls/PointerLockControls.js';
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/loaders/GLTFLoader.js';
+import { modelList } from './model-list.js';
 
 // Importamos la función showPopup desde popup.js
 import { showPopup } from './popup.js';
@@ -24,14 +25,6 @@ let model = null; // Aquí se cargará el modelo (Duck)
 let corridorRaycaster;
 
 let corridorCanvas, instructions;
-const modelUrls = [
-    'https://alerobledo.github.io/demo3d/Duck.glb',
-    'https://alerobledo.github.io/demo3d/Duck2.glb',
-    'https://alerobledo.github.io/demo3d/Duck3.glb',
-    'https://alerobledo.github.io/demo3d/happy_face_emogi_100.glb',
-    'https://alerobledo.github.io/demo3d/emogi_glasses_face_1.glb'
-];
-
 const modelsIds = [];
 
 export function initCorridor() {
@@ -64,19 +57,19 @@ export function initCorridor() {
 
   // Cargar los modelos
   const loader = new GLTFLoader();
-  modelUrls.forEach((url, index) => {
+  modelList.forEach((modelData, index) => {
     loader.load(
-      url,
+      modelData.url,
       (gltf) => {
         model = gltf.scene;
         const spacing = 1;
-        const zPos = -((modelUrls.length - 1) * spacing) / 2 + index * spacing;
+        const zPos = -((modelList.length - 1) * spacing) / 2 + index * spacing;
         model.position.set(9, 1, zPos);
         model.scale.set(0.3, 0.3, 0.3);
-        model.rotation.y = Math.PI; // Rotate the model 180 degrees to face the camera
+        model.rotation.y = modelData.rotation;
         modelsIds.push(model.uuid); // for trigger the popup
         corridorScene.add(model);
-        console.log('Loaded model - url', url,'  - uuid: ', model.uuid,  ' - position: ', model.position); 
+        console.log('Loaded model - name:', modelData.name, ' - url:', modelData.url, ' - uuid:', model.uuid, ' - position:', model.position); 
       },
       undefined,
       (err) => console.error(err)
@@ -350,24 +343,24 @@ function onCorridorClick(e) {
   corridorRaycaster.setFromCamera(ndc, corridorCamera);
   const intersects = corridorRaycaster.intersectObjects(corridorScene.children, true);
   console.log('Intersects count:', intersects.length);
-  console.log('modelUrls:',modelUrls);
-  console.log('modelsIds:',modelsIds);
+  console.log('modelList:', modelList);
+  console.log('modelsIds:', modelsIds);
       
- if (intersects.length > 0) {
+  if (intersects.length > 0) {
     for (let i = 0; i < intersects.length; i++) {
       const obj = intersects[i].object;
-      console.log('obj:',obj, '  - uuid: ', obj.uuid);
+      console.log('obj:', obj, '  - uuid: ', obj.uuid);
       console.log('parent.parent: ', obj.parent.parent);
       console.log('parent.parent.uuid: ', obj.parent.parent.uuid);
       if (modelsIds.includes(obj.parent.parent.uuid)) { // Check if the object is one of the models
         const modelIndex = modelsIds.indexOf(obj.parent.parent.uuid);
-         const modelUrl = modelUrls[modelIndex];
-         console.log('Model clicked, opening popup with URL:', modelUrl);
-         showPopup(modelUrl);
-         if (controls && !isMobile()) {
-           controls.unlock();
-         }
-         break;
+        const modelData = modelList[modelIndex];
+        console.log('Model clicked, opening popup with URL:', modelData.url);
+        showPopup(modelData.url);
+        if (controls && !isMobile()) {
+          controls.unlock();
+        }
+        break;
       }
     }
   }
