@@ -12,6 +12,7 @@ let btnClose, btnBuy;
 
 let modelInPopup = null;
 let currentModelUrl = null;
+let currentModelUuid = null;
 
 import { controls } from './corridor.js';
 
@@ -62,10 +63,12 @@ export function initPopup() {
  * Muestra el popup, carga de nuevo el modelo .glb (o podrías clonar el del pasillo),
  * y arranca el bucle de animación del popup.
  * @param {string} modelUrl - La URL del modelo GLB a cargar.
+ * @param {string} modelUuid - El UUID del modelo.
  */
-export function showPopup(modelUrl) {
-   console.log('showPopup called with modelUrl:', modelUrl);
+export function showPopup(modelUrl, modelUuid) {
+   console.log('showPopup called with modelUrl:', modelUrl, 'and modelUuid:', modelUuid);
    currentModelUrl = modelUrl; // Store the current model URL
+   currentModelUuid = modelUuid; // Store the current model UUID
    popupModal.style.display = 'flex';
    console.log('Popup display set to flex');
 

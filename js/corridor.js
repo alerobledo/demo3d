@@ -67,9 +67,10 @@ export function initCorridor() {
         model.position.set(9, 1, zPos);
         model.scale.set(0.3, 0.3, 0.3);
         model.rotation.y = modelData.rotation;
-        modelsIds.push(model.uuid); // for trigger the popup
+        model.uuid = modelData.uuid; // Set the UUID from modelList
+        modelsIds.push(modelData.uuid); // Store the UUID from modelList
         corridorScene.add(model);
-        console.log('Loaded model - name:', modelData.name, ' - url:', modelData.url, ' - uuid:', model.uuid, ' - position:', model.position); 
+        console.log('Loaded model - name:', modelData.name, ' - url:', modelData.url, ' - uuid:', modelData.uuid, ' - position:', model.position); 
       },
       undefined,
       (err) => console.error(err)
@@ -355,8 +356,8 @@ function onCorridorClick(e) {
       if (modelsIds.includes(obj.parent.parent.uuid)) { // Check if the object is one of the models
         const modelIndex = modelsIds.indexOf(obj.parent.parent.uuid);
         const modelData = modelList[modelIndex];
-        console.log('Model clicked, opening popup with URL:', modelData.url);
-        showPopup(modelData.url);
+        console.log('Model clicked, opening popup with URL:', modelData.url, 'and UUID:', modelData.uuid);
+        showPopup(modelData.url, modelData.uuid);
         if (controls && !isMobile()) {
           controls.unlock();
         }
