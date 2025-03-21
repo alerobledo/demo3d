@@ -3,12 +3,14 @@ import * as THREE from 'three';
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/loaders/GLTFLoader.js';
 
-let cart = [];
+// Change cart to use a Map to store model URLs and their counts
+let cart = new Map();
 
 export function addToCart(modelUrl) {
-    cart.push(modelUrl);
-    console.log('Item added to cart:', modelUrl);
-    console.log('Current cart:', cart);
+    const currentCount = cart.get(modelUrl) || 0;
+    cart.set(modelUrl, currentCount + 1);
+    console.log('Item added to cart:', modelUrl, 'Count:', currentCount + 1);
+    console.log('Current cart:', Object.fromEntries(cart));
     updateCartDisplay();
 }
 
@@ -17,14 +19,16 @@ export function getCart() {
 }
 
 export function clearCart() {
-    cart = [];
+    cart.clear();
     updateCartDisplay();
 }
 
 function updateCartDisplay() {
     const cartCount = document.getElementById('cartCount');
     if (cartCount) {
-        cartCount.textContent = cart.length;
+        // Calculate total items by summing all counts
+        const totalItems = Array.from(cart.values()).reduce((sum, count) => sum + count, 0);
+        cartCount.textContent = totalItems;
     }
 }
 
@@ -211,7 +215,7 @@ function showCartContents() {
     `;
     content.appendChild(title);
 
-    if (cart.length === 0) {
+    if (cart.size === 0) {
         const emptyMessage = document.createElement('p');
         emptyMessage.textContent = 'Your cart is empty';
         emptyMessage.style.cssText = `
@@ -229,7 +233,8 @@ function showCartContents() {
             margin: 0;
         `;
 
-        cart.forEach((item, index) => {
+        // Iterate through cart items
+        cart.forEach((count, modelUrl) => {
             const li = document.createElement('li');
             li.style.cssText = `
                 padding: 16px;
@@ -247,11 +252,11 @@ function showCartContents() {
                 gap: 16px;
             `;
 
-            const previewCanvas = createItemPreview(item, itemContainer);
+            const previewCanvas = createItemPreview(modelUrl, itemContainer);
             itemContainer.appendChild(previewCanvas);
 
             const itemName = document.createElement('span');
-            itemName.textContent = `Item ${index + 1}`;
+            itemName.textContent = `Item (${count})`;
             itemName.style.cssText = `
                 font-size: 20px;
                 color: #333;
@@ -286,7 +291,7 @@ function showCartContents() {
             });
 
             removeButton.addEventListener('click', () => {
-                cart.splice(index, 1);
+                cart.delete(modelUrl);
                 updateCartDisplay();
                 showCartContents(); // Refresh the display
             });
