@@ -2,6 +2,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/controls/OrbitControls.js';
 import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.146.0/examples/jsm/loaders/GLTFLoader.js';
+import { modelList } from './model-list.js';
 
 // Change cart to use a Map to store model URLs and their counts
 let cart = new Map();
@@ -30,6 +31,23 @@ function updateCartDisplay() {
         const totalItems = Array.from(cart.values()).reduce((sum, count) => sum + count, 0);
         cartCount.textContent = totalItems;
     }
+}
+
+// Helper function to format price
+function formatPrice(price) {
+    return `$${price.toFixed(2)}`;
+}
+
+// Helper function to calculate total price
+function calculateTotalPrice() {
+    let total = 0;
+    cart.forEach((count, modelUrl) => {
+        const modelData = modelList.find(model => model.url === modelUrl);
+        if (modelData) {
+            total += modelData.price * count;
+        }
+    });
+    return total;
 }
 
 // Initialize cart display
@@ -235,6 +253,9 @@ function showCartContents() {
 
         // Iterate through cart items
         cart.forEach((count, modelUrl) => {
+            const modelData = modelList.find(model => model.url === modelUrl);
+            if (!modelData) return;
+
             const li = document.createElement('li');
             li.style.cssText = `
                 padding: 16px;
@@ -255,13 +276,39 @@ function showCartContents() {
             const previewCanvas = createItemPreview(modelUrl, itemContainer);
             itemContainer.appendChild(previewCanvas);
 
+            const itemInfo = document.createElement('div');
+            itemInfo.style.cssText = `
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            `;
+
             const itemName = document.createElement('span');
-            itemName.textContent = `Item (${count})`;
+            itemName.textContent = `${modelData.name} (${count})`;
             itemName.style.cssText = `
                 font-size: 20px;
                 color: #333;
             `;
-            itemContainer.appendChild(itemName);
+            itemInfo.appendChild(itemName);
+
+            const itemPrice = document.createElement('span');
+            itemPrice.textContent = `${formatPrice(modelData.price)} each`;
+            itemPrice.style.cssText = `
+                font-size: 16px;
+                color: #666;
+            `;
+            itemInfo.appendChild(itemPrice);
+
+            const itemTotal = document.createElement('span');
+            itemTotal.textContent = `Total: ${formatPrice(modelData.price * count)}`;
+            itemTotal.style.cssText = `
+                font-size: 18px;
+                color: #333;
+                font-weight: bold;
+            `;
+            itemInfo.appendChild(itemTotal);
+
+            itemContainer.appendChild(itemInfo);
 
             const removeButton = document.createElement('button');
             removeButton.textContent = '×';
@@ -302,6 +349,37 @@ function showCartContents() {
         });
 
         content.appendChild(itemsList);
+
+        // Add total price section
+        const totalSection = document.createElement('div');
+        totalSection.style.cssText = `
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 2px solid #eee;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        `;
+
+        const totalLabel = document.createElement('span');
+        totalLabel.textContent = 'Total Price:';
+        totalLabel.style.cssText = `
+            font-size: 24px;
+            color: #333;
+            font-weight: bold;
+        `;
+
+        const totalPrice = document.createElement('span');
+        totalPrice.textContent = formatPrice(calculateTotalPrice());
+        totalPrice.style.cssText = `
+            font-size: 24px;
+            color: #333;
+            font-weight: bold;
+        `;
+
+        totalSection.appendChild(totalLabel);
+        totalSection.appendChild(totalPrice);
+        content.appendChild(totalSection);
 
         const clearButton = document.createElement('button');
         clearButton.textContent = 'Clear Cart';
