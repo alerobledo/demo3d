@@ -67,10 +67,16 @@ export function initCorridor() {
         model.position.set(9, 1, zPos);
         model.scale.set(0.3, 0.3, 0.3);
         model.rotation.y = modelData.rotation;
-        model.uuid = modelData.uuid; // Set the UUID from modelList
-        modelsIds.push(modelData.uuid); // Store the UUID from modelList
+        model.uuid = modelData.uuid;
+        modelsIds.push(modelData.uuid);
         corridorScene.add(model);
-        console.log('Loaded model - name:', modelData.name, ' - url:', modelData.url, ' - uuid:', modelData.uuid, ' - position:', model.position); 
+
+        // Add price label with updated position (much closer to the model)
+        const priceLabel = createPriceLabel(modelData);
+        priceLabel.position.set(9, 0.95, zPos); // Changed from 0.8 to 0.95 to be much closer to the model
+        corridorScene.add(priceLabel);
+
+        console.log('Loaded model - name:', modelData.name, ' - url:', modelData.url, ' - uuid:', modelData.uuid, ' - position:', model.position);
       },
       undefined,
       (err) => console.error(err)
@@ -381,4 +387,35 @@ function isDescendantOf(child, parent) {
     current = current.parent;
   }
   return false;
+}
+
+function createPriceLabel(modelData) {
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.width = 48;
+    canvas.height = 16;
+
+    // Add text with a clearer font and larger size
+    context.fillStyle = 'white';
+    context.font = 'bold 12px Arial';  // Increased size and using Arial for better clarity
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText(`$${modelData.price.toFixed(2)}`, canvas.width/2, canvas.height/2);
+
+    // Create texture from canvas
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+
+    // Create sprite material with transparent background
+    const material = new THREE.SpriteMaterial({ 
+        map: texture,
+        transparent: true,
+        depthTest: false  // This ensures the text is always visible
+    });
+    const sprite = new THREE.Sprite(material);
+    
+    // Set sprite size
+    sprite.scale.set(0.4, 0.133, 1);
+    
+    return sprite;
 }
